@@ -19,7 +19,7 @@ void echo_interrupt(TIM_TypeDef *timer);
 void piezo_set(u8 on);
 u8 servo_ready(void);
 void servo_open(void);
-u8 keypad_zero_edge(u32 now);
+char keypad_key(u32 now);
 void leds_set(u8 a, u8 b);
 void serial_init(void);
 void serial_interrupt(u8 port);

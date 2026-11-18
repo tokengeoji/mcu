@@ -161,29 +161,34 @@ void piezo_set(u8 on)
     TIM_SetCompare1(TIM3, on ? piezo_half_period : 0);
 }
 
-u8 keypad_zero_edge(u32 now)
+char keypad_key(u32 now)
 {
-    static u8 row, pressed, stable, count, other_key;
+    static const char keys[4][3] = {
+        {'1','2','3'}, {'4','5','6'}, {'7','8','9'}, {'*','0','#'}
+    };
+    static u8 row, count;
+    static char frame_key, candidate, stable;
     static u32 last_tick;
     u16 cols, pin;
-    u8 zero, edge = 0;
-    if (now == last_tick) return 0;
+    u8 col;
+    if (now == last_tick) return stable;
     last_tick = now;
     cols = GPIO_ReadInputData(GPIOC) & 7;
-    if (row < 3) {
-        if (cols) other_key = 1;
-    } else {
-        zero = (cols == GPIO_Pin_1 && !other_key);
-        other_key = 0;
-        if (zero != pressed) { pressed = zero; count = 1; }
+    for (col = 0; col < 3; ++col) {
+        if (cols & (1U << col)) frame_key = frame_key ? '?' : keys[row][col];
+    }
+    if (row == 3) {
+        if (frame_key == '?') frame_key = 0; /* Ignore chords across the whole scan. */
+        if (frame_key != candidate) { candidate = frame_key; count = 1; }
         else if (count < 5) ++count;
-        if (count == 5 && stable != pressed) { stable = pressed; edge = stable; }
+        if (count == 5) stable = candidate;
+        frame_key = 0;
     }
     pin = (u16)(GPIO_Pin_3 << row);
     gpio_mode(GPIOC, pin, GPIO_Mode_Out_OD);
     row = (row + 1) & 3;
     gpio_mode(GPIOC, (u16)(GPIO_Pin_3 << row), GPIO_Mode_Out_PP);
-    return edge;
+    return stable;
 }
 
 static void set_capture_edge(u16 polarity)

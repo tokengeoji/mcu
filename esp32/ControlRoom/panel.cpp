@@ -11,17 +11,27 @@ static constexpr size_t planeBytes = EPD_HEIGHT * rowBytes;
 static constexpr uint32_t busyLimitMs = 30000;
 static bool timedOut, needsFull = true;
 static int partialCount;
+static uint32_t busyLowMs;
 
 // Called by the staged GDEY075Z08 driver at every manufacturer BUSY wait.
 bool panelReady() {
     const uint32_t start = millis();
     while (!isEPD_W21_BUSY) {
         if (millis() - start >= busyLimitMs) {
+            // Sample the input with a weak pull-up only after the vendor wait failed.
+            pinMode(A14, INPUT_PULLUP);
+            delay(1);
+            const bool rises = isEPD_W21_BUSY;
+            pinMode(A14, INPUT);
+            Serial.println(rises
+                ? "EPD: BUSY LOW for 30 s, rose with weak pull-up. Check P5 pin 8 / panel power."
+                : "EPD: BUSY LOW for 30 s, still LOW with weak pull-up. Check adapter, ribbon and panel model.");
             timedOut = true;
             return false;
         }
         delay(1);
     }
+    busyLowMs = millis() - start;
     return true;
 }
 
@@ -159,8 +169,14 @@ bool drawScreen(const Screen &s) {
     }
     SPI.beginTransaction(SPISettings(10000000, MSBFIRST, SPI_MODE0));
     if (needsFull) {
+        Serial.println("EPD: starting full refresh (GDEY075Z08).");
         EPD_Init();
-        if (!timedOut) EPD_SetRAMValue_BaseMap(blackPlane, redPlane);
+        if (!timedOut) {
+            Serial.println("EPD: panel initialized; sending map.");
+            EPD_SetRAMValue_BaseMap(blackPlane, redPlane);
+            if (!timedOut)
+                Serial.printf("EPD: refresh command sent; BUSY wait %lu ms.\n", (unsigned long)busyLowMs);
+        }
         partialCount = 0;
     } else {
         for (const Window &w : windows) {

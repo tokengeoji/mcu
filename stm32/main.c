@@ -11,6 +11,10 @@ enum Command { NONE, SAFE, CAUTION, DANGER, ARRIVED };
 static const char *const commands[] = {"NONE","SAFE","CAUTION","DANGER","ARRIVED"};
 static enum Command command;
 static u8 door_opened, alarm_on;
+static char held_key;
+static u8 echo_beep;
+static u32 beep_started;
+#define ECHO_BEEP_MS 40U
 enum Alarm { UNKNOWN, CLEAR, ACTIVE, FAULT, ACTIVE_FAULT };
 static const char *const alarms[] = {"UNKNOWN","CLEAR","ACTIVE","FAULT","ACTIVE_FAULT"};
 static enum Alarm alarm;
@@ -53,7 +57,6 @@ static void hazard_reading(int mm)
         else if (mm >= SITE_HAZARD_OFF_MM || before == CLEAR || before == ACTIVE) alarm = CLEAR;
         else if (before != FAULT) alarm = UNKNOWN;
     }
-    piezo_set(alarm_on);
     if (before != alarm) status_dirty = 1;
 }
 
@@ -161,15 +164,19 @@ static void handle_serial(u32 now)
 
 static void outputs(u32 now)
 {
+    char key = keypad_key(now);
     u8 lit = ((now - blink_start) / 500U) % 2 == 0;
     leds_set(command == SAFE || command == ARRIVED ||
              ((command == CAUTION || command == DANGER) && lit),
              command == ARRIVED || (command == DANGER && lit));
-    if (keypad_zero_edge(now) && command == ARRIVED && servo_ready() && !door_opened) {
+    if (key == '0' && held_key != key && command == ARRIVED && servo_ready() && !door_opened) {
         servo_open();
         door_opened = 1;
         status_dirty = 1;
     }
+    if (key != held_key || now - beep_started >= ECHO_BEEP_MS) echo_beep = 0;
+    held_key = key;
+    piezo_set(alarm_on || echo_beep);
 }
 
 static void sample(u32 now)
@@ -184,6 +191,10 @@ static void sample(u32 now)
         if (!echo_result(now - started, &mm)) return;
         raw[sensor] = mm;
         measured_at[sensor] = now;
+        if (held_key == '1' + sensor && mm > 0) {
+            beep_started = now;
+            echo_beep = 1;
+        }
         if (sensor == 4) hazard_reading(mm);
         if (slot == 7) send_position(now);
         waiting = 0;

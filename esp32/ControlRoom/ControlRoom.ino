@@ -27,6 +27,7 @@ static void readLink(void *) {
                     line[used] = 0;
                     const uint32_t now = millis();
                     if (line[0] == 'P' && parsePosition(line, feed.position)) {
+                        if (!feed.havePosition) Serial.println("UART: first valid STM32 position frame.");
                         feed.havePosition = true;
                         feed.positionReceived = now;
                         if (feed.position.valid) {
@@ -35,6 +36,7 @@ static void readLink(void *) {
                         }
                         xQueueOverwrite(newest, &feed);
                     } else if (line[0] == 'S' && parseStatus(line, feed.status)) {
+                        if (!feed.haveStatus) Serial.println("UART: first valid STM32 status frame.");
                         feed.haveStatus = true;
                         feed.statusReceived = now;
                         xQueueOverwrite(newest, &feed);
