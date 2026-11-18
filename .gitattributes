@@ -1,0 +1,5 @@
+# IAR Embedded Workbench for Windows expects CRLF in its editor.
+* text=auto eol=lf
+stm32/** text=auto eol=crlf
+stm32/*.md text eol=lf
+*.png binary

@@ -6,6 +6,8 @@
 
 ## 빌드와 초기 설정
 
+다른 Windows PC에서는 프로젝트 전체를 새 폴더에 내려받아 압축을 푼 뒤 `stm32/Getting_start.eww`를 연다. 저장소의 `.gitattributes`가 STM32의 C·헤더·어셈블리·IAR 설정 파일을 Windows 개행(CRLF)으로 지정한다. 이전 소스 ZIP을 풀어 사용하던 경우 새 폴더에서 시작하고, 보정한 `site_profile.h` 값이 있으면 옮긴다. STM32는 수업용 IAR EWARM, ESP32는 Arduino CLI와 esp32 코어 2.0.17이 필요하다. [IAR 편집기 개행 설정](https://docs.iar.com/ewarm/10.1x/en/ide-project-management-and-building/the-development-environment/reference-information-on-the-ide/editor-options.html) · [Git 개행 설정](https://git-scm.com/docs/gitattributes#_eol)
+
 | 대상 | 프로젝트 | 시작 방법 |
 | --- | --- | --- |
 | 한백전자 HBE-MCU-MULTI · STM32F103RBT6 | [IAR 워크스페이스](stm32/Getting_start.eww) | 실습 환경인 IAR Embedded Workbench for Arm에서 `EMB_FLASH`를 선택하고 **Project → Rebuild All**을 실행한다. |
