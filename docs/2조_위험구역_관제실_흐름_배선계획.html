@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="2조 위험구역 작업자 추적 관제실: 확정 동작, STM32·ESP32 역할, 구현 핀 배정, 전원 및 검증 계획">
+<title>2조 | 위험구역 작업자 추적 관제실 · 동작 및 배선 계획</title>
+<style>
+:root{--ink:#18262d;--muted:#5e7078;--line:#d9e2e6;--page:#f3f6f7;--teal:#147c78;--tealsoft:#e6f3ef;--amber:#9a6200;--ambersoft:#fff4db;--red:#c53c3c;--redsoft:#fff0ef;--nav:#142c36;--radius:16px}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:30px}body{margin:0;color:var(--ink);background:var(--page);font:15px/1.75 "Malgun Gothic","Apple SD Gothic Neo","Noto Sans CJK KR",sans-serif;word-break:keep-all;overflow-wrap:anywhere}a{color:var(--teal);text-underline-offset:3px}button,input,select{font:inherit}button{cursor:pointer}a:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #269b9a;outline-offset:3px}p{margin:9px 0 15px}b,strong{font-weight:750}h1,h2,h3,h4{line-height:1.4;margin:0 0 16px}h1{font-size:clamp(28px,3.6vw,44px);letter-spacing:-1.5px}h2{font-size:25px;letter-spacing:-.5px}h3{font-size:18px;margin-top:24px}h4{font-size:16px;margin-bottom:8px}ul,ol{padding-left:22px}li{margin:5px 0}code,pre{font-family:Consolas,"D2Coding",monospace}code{background:#eef2f4;padding:2px 6px;border-radius:5px;font-size:13px}pre{white-space:pre-wrap;background:#172d38;color:#e6f3f2;padding:20px;border-radius:12px;line-height:1.7;font-size:13px;overflow-x:auto}pre code{background:none;color:inherit;padding:0}small,.small{font-size:12px;color:var(--muted)}
+.sidebar{position:fixed;inset:0 auto 0 0;width:236px;background:var(--nav);padding:30px 20px;color:#dce8ed;overflow-y:auto}.brand{font:700 12px/1.6 Consolas,monospace;letter-spacing:2px;color:#8cd0c6}.side-title{font-size:20px;font-weight:750;line-height:1.5;margin:15px 0 23px;color:white}.sidebar nav a{display:block;color:#d7e3e7;padding:9px 12px;border-radius:8px;text-decoration:none;font-size:13px;margin:3px 0}.sidebar nav a:hover{background:#254450;color:white}.side-note{border-top:1px solid #38515a;padding-top:18px;margin-top:24px;font-size:12px;color:#b8cbd2}.sidebar .print{background:#d9f0e8;color:#163f3b;border:0;width:100%;padding:10px;border-radius:8px;margin-top:20px;font-weight:700}
+main{margin-left:236px;max-width:1480px;padding:40px 44px 70px}.hero{background:white;padding:34px;border:1px solid var(--line);border-radius:20px;position:relative;overflow:hidden}.eyebrow{color:var(--teal);font-size:12px;font-weight:750;letter-spacing:1.5px;margin-bottom:14px}.lead{font-size:17px;max-width:880px;color:#3e555f}.meta{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.badge{display:inline-flex;align-items:center;gap:5px;border-radius:30px;padding:4px 11px;font-size:12px;font-weight:700;border:1px solid transparent}.ok{color:#196758;background:var(--tealsoft)}.proposal{color:#285a87;background:#e9f0fa}.pending{color:var(--amber);background:var(--ambersoft)}.danger{color:#a13131;background:var(--redsoft)}.hero .foot{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px;margin:20px 0 0}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:24px}.metric{padding:16px 18px;border-radius:12px;background:#f2f7f7}.metric b{display:block;font-size:23px;margin-bottom:2px}.metric span{font-size:12px;color:var(--muted)}
+section{margin-top:26px;background:white;border:1px solid var(--line);border-radius:var(--radius);padding:29px 30px;scroll-margin-top:25px}.sectionhead{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;margin-bottom:14px}.sectionhead h2{margin:0}.secno{color:var(--teal);font-weight:800;font:700 12px Consolas,monospace;display:block;margin-bottom:8px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}.cols3{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.card{background:#f7f9fa;border:1px solid #e0e8ec;border-radius:12px;padding:20px}.card p:last-child{margin-bottom:0}.card h3{margin-top:0}.notice{border-left:4px solid var(--teal);padding:15px 18px;background:#edf7f3;border-radius:0 10px 10px 0;margin:18px 0}.notice.warn{border-color:#d2a12e;background:#fff8e7}.notice.red{border-color:var(--red);background:var(--redsoft)}.notice p:last-child{margin-bottom:0}.source{font-size:12px;color:var(--muted);margin-top:11px}.source a{margin-right:5px;font-weight:650} .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;margin:15px 0}table{border-collapse:collapse;width:100%;font-size:13px}th{background:#edf3f5;text-align:left;font-size:12px;padding:12px 13px;white-space:nowrap}td{padding:12px 13px;border-top:1px solid var(--line);vertical-align:top;line-height:1.6}tbody tr:nth-child(even){background:#fafcfc}tbody tr:hover{background:#f0f7f7}.compact td{padding:10px 12px}.flow{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}.step{padding:16px 13px;background:#f3f7f8;border:1px solid #dbe6e9;border-radius:11px;position:relative}.step b{display:block;font-size:14px;line-height:1.5;margin:8px 0}.step span{font-size:12px;color:var(--muted);line-height:1.7;display:block}.number{font:800 16px Consolas,monospace;color:var(--teal)}.boardflow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:24px 0}.board{flex:1;min-width:170px;padding:23px 17px;border:1px solid #bdd2da;border-radius:13px;background:#f3f8f9;text-align:center}.board.primary{background:var(--nav);color:white;min-width:205px}.board b{display:block;font-size:18px}.board small{display:block;margin-top:5px}.board.primary small{color:#bfd3db}.arrow{font-size:21px;color:#688991;text-align:center;line-height:1.25}.arrow small{display:block;font-size:10px;margin-bottom:4px}.splitline{height:1px;background:var(--line);margin:22px 0}.roles{display:grid;grid-template-columns:1.1fr 1fr;gap:18px}.note-label{font-weight:750;color:var(--teal)}details{border:1px solid var(--line);border-radius:11px;margin:12px 0;padding:0 18px}summary{padding:13px 0;cursor:pointer;font-weight:700}details[open]{padding-bottom:14px}details p{font-size:14px}details .tablewrap{margin-bottom:5px}.findrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.search{padding:10px 13px;border:1px solid #b8cbd4;border-radius:8px;min-width:270px;flex:1}.pin-table{min-width:900px}.pin-table td:nth-child(2){font-weight:800;font-family:Consolas,monospace;white-space:nowrap;color:#175974}.pin-table td:nth-child(3){white-space:nowrap}.portgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.port{border:1px solid var(--line);padding:15px;border-radius:10px}.port div{font:13px/1.9 Consolas,monospace}.checks{display:grid;gap:10px}.checks label{display:flex;align-items:flex-start;gap:10px;background:#f5f8f9;border-radius:8px;padding:12px 15px}.checks input{margin-top:6px;flex-shrink:0}.checks span{font-size:13px}.phases .card{border-top:3px solid #92b9b6}.phase-tag{font:700 12px Consolas,monospace;color:var(--teal);margin-bottom:10px}.refs li{font-size:13px;margin:12px 0;line-height:1.7}.muted{color:var(--muted)}.outline-btn{border:1px solid #a5bfc7;background:white;border-radius:8px;padding:9px 13px;color:var(--ink)}.footer{text-align:center;font-size:12px;color:var(--muted);margin:30px 0 0}
+.demo{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(270px,1fr);gap:18px}.mapbox{border:1px solid #c8d5dc;border-radius:12px;background:#fff;overflow:hidden}.maptitle{background:#f0f4f5;padding:11px 16px;font-size:12px;display:flex;justify-content:space-between;gap:12px}.mapbox svg{width:100%;height:auto;display:block}.mapcaption{font-size:12px;padding:10px 16px;border-top:1px solid var(--line);color:var(--muted)}.control{padding:20px;border:1px solid var(--line);border-radius:12px;background:#f8fafb}.control h3{margin:0 0 10px}.commands{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 20px}.cmd{border:1px solid #b8cad1;background:#fff;color:var(--ink);border-radius:8px;padding:8px 5px;font-size:13px}.cmd.active{background:#1e5b66;color:white;border-color:#1e5b66}.ledpanel{display:flex;gap:18px;align-items:center;background:#152c36;padding:17px;border-radius:10px;margin:13px 0;color:#dce9ee}.led{width:24px;height:24px;background:#35444d;border:2px solid #53636a;border-radius:50%;display:block;margin:0 auto 6px}.led.on,.led.blink{background:#eaf08c;border-color:#fafdc9;box-shadow:0 0 12px #c1cd6680}.led.blink{animation:blink 1s step-end infinite}.led-item{text-align:center;min-width:37px;font-size:11px}.readout{font-weight:750;font-size:15px}.sl{display:block;margin-top:15px;font-size:13px}.sl input[type=range]{width:100%;margin:10px 0;accent-color:var(--teal)}.alarmbox{border:1px solid #d6e0e4;background:#fff;padding:12px;border-radius:9px;margin:12px 0;font-size:13px}.alarmbox.alarming{background:#fff0ef;border-color:#dc9191;color:#a12929}.alarmbox input{margin-right:7px}.doorbtn{width:100%;border:0;border-radius:9px;padding:10px;background:#244b5b;color:white;margin-top:8px}.demohint{font-size:11px;line-height:1.65;margin:8px 0 0;color:var(--muted)}@keyframes blink{50%{background:#35444d;border-color:#53636a;box-shadow:none}}
+@media(min-width:1500px){main{margin-left:250px;max-width:1550px}.sidebar{width:250px}}
+@media(max-width:1120px){main{padding:28px 22px}.flow{grid-template-columns:repeat(3,1fr)}.cols3{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:850px){.sidebar{position:relative;width:auto;padding:20px 22px}.side-title{margin:7px 0 10px}.sidebar nav{display:flex;gap:5px;overflow:auto}.sidebar nav a{white-space:nowrap;font-size:12px;padding:6px 10px}.side-note{display:none}.sidebar .print{width:auto;padding:7px 14px;position:absolute;right:22px;top:22px;margin:0}main{margin-left:0;padding:20px 14px}.hero{padding:25px 20px}section{padding:24px 19px}.cols,.roles,.demo,.portgrid{grid-template-columns:1fr}.flow{grid-template-columns:repeat(2,1fr)}h1{letter-spacing:-.7px}.boardflow{gap:6px}.board{min-width:140px}.sectionhead{display:block}.sectionhead .badge{margin-top:10px}.search{min-width:160px}.hero .lead{font-size:15px}}
+@media print{html{scroll-behavior:auto}body{background:white;color:black;font-size:10pt}.sidebar,.noprint,.control,.findrow{display:none!important}main{margin:0;max-width:none;padding:0}.hero,section{border:0;border-radius:0;padding:10px 0;margin:15px 0}.hero{border-bottom:2px solid #333}.metrics{grid-template-columns:repeat(4,1fr)}h1{font-size:25pt}h2{font-size:17pt}h3{font-size:12pt}h1,h2,h3,summary{break-after:avoid}tr,.card,.notice,.step{break-inside:avoid}table{font-size:8pt}th,td{padding:6px}.tablewrap{overflow:visible}.pin-table{min-width:0;font-size:7.4pt}.pin-table td,.pin-table th{padding:5px}.demo{grid-template-columns:1fr}.mapbox{max-width:650px;margin:auto}pre{color:black;background:#f3f3f3}a{color:inherit}.flow{grid-template-columns:repeat(3,1fr)}.cols3{grid-template-columns:1fr 1fr}.source{font-size:8pt}.led.blink{animation:none}.footer{font-size:8pt}@page{size:A4;margin:15mm}
+</style>
+</head>
+<body>
+<aside class="sidebar"><div class="brand">GROUP 02 · MCU PROJECT</div><div class="side-title">위험구역 작업자<br>추적 관제실</div><nav aria-label="계획서 목차">
+<a href="#scope">01 · 확정 범위와 흐름</a><a href="#architecture">02 · 보드별 역할</a><a href="#demo">03 · 동작 미리보기</a><a href="#stm-pins">04 · STM32 핀 연결</a><a href="#esp-pins">05 · ESP32·e-Ink</a><a href="#power">06 · 전원·접지</a><a href="#runtime">07 · 타이머·통신</a><a href="#tracking">08 · 추적·경보·문</a><a href="#display">09 · 화면 구현</a><a href="#verification">10 · 제작·검증 순서</a><a href="#pending">11 · 미정 사항</a><a href="#sources">12 · 근거 자료</a></nav><button class="print" onclick="window.print()">인쇄 / PDF로 저장</button><div class="side-note">파일 하나로 열리는 HTML<br>네트워크 없이 본문·미리보기 사용 가능<br><br>실제 회로 연결이나 장비 제어를 수행하지 않는 계획서입니다.</div></aside>
+<main>
+<header class="hero"><div class="eyebrow">동작 이해 · 연결 계획 · 시험 기준</div><h1>위험구역 작업자 추적 관제실</h1><p class="lead">물체 하나를 작업자로 가정하고, 관제소의 지시·현장의 자동 경고·목적지 문 개방을 서로 구분해 구현한다. <strong>STM32는 측정과 제어, ESP32는 e-Ink 화면을 담당한다.</strong></p><div class="meta"><span class="badge ok">2조 · 기능 요구사항 확정</span><span class="badge proposal">양쪽 펌웨어 빌드 확인</span><span class="badge pending">실물 결선·통합 구동 미검증</span></div><div class="metrics"><div class="metric"><b>1개</b><span>추적할 물체 / 인원 계수 제외</span></div><div class="metric"><b>4 + 1</b><span>복도 센서 + 위험지점 센서</span></div><div class="metric"><b>4가지</b><span>UART 관제 명령과 LED 상태</span></div><div class="metric"><b>숫자 0</b><span>목적지에서 문 개방 입력</span></div></div><p class="foot">판단 기준: 사용자가 확정한 기능 → 실습자료의 실제 연결 → 첨부 코드 → 공식 사양. 현재 핀 배정과 펌웨어를 함께 확인할 수 있다. <a href="https://github.com/tokengeoji/mcu" target="_blank" rel="noopener noreferrer">GitHub · tokengeoji/mcu</a></p></header>
+
+<section id="scope"><div class="sectionhead"><div><span class="secno">01 / REQUIREMENTS</span><h2>프로젝트 흐름</h2></div><span class="badge ok">대화에서 확정한 내용</span></div>
+<div class="flow"><div class="step"><div class="number">01</div><b>출발 전 지도 확인</b><span>관제소 e-Ink에서 경로와 빨간 위험구역을 확인한다.</span></div><div class="step"><div class="number">02</div><b>작업자 역할의 물체 이동</b><span>직선·직각으로 구성된 복도 4구간을 물체 하나가 이동한다.</span></div><div class="step"><div class="number">03</div><b>위치 추정과 지도 표시</b><span>복도별 초음파 → STM32 좌표 추정 → ESP32 → 흰색 위치점.</span></div><div class="step"><div class="number">04</div><b>관제소의 상태 지시</b><span>PC에서 보낸 UART 명령에 따라 작업자용 LED 2개를 변경한다.</span></div><div class="step"><div class="number">05</div><b>매우 위험한 지점 경보</b><span>별도 초음파 S5가 접근을 감지하면 부저 ON, 이탈하면 OFF.</span></div><div class="step"><div class="number">06</div><b>목적지 문 개방</b><span>관제자가 ARRIVED 전송 후 키패드 숫자 0 입력 → 서보모터로 문 한 개 개방.</span></div></div>
+<p class="source">요구사항 근거: 사용자 최종 합의와 「01_2조_프로젝트_주제신청서_역할추가.docx」. 03~05는 순서대로 한 번만 실행하는 절차가 아니라 이동 중 병행되는 기능이다. <a href="#src-local">[L1]</a></p>
+<div class="cols"><div class="card"><h3>관제소의 역할</h3><p>지도에서 작업자의 위치와 위험구역을 확인하고, 하이퍼터미널로 현장에 <b>양호·경계·위험·도착</b> 지시를 보낸다. PC는 관제 명령 입력 장치이며, e-Ink는 위치 현황판이다.</p></div><div class="card"><h3>작업자와 현장의 역할</h3><p>작업자는 출발 전에 지도를 보고, 이동 중에는 LED 2개로 지시를 확인한다. 실제 사람 대신 <b>물체 1개</b>를 사용한다. LED·PIEZO는 기존 키트에 두어도 되며, 목적지 문은 모형 한 곳만 움직인다.</p></div></div>
+<div class="tablewrap"><table><thead><tr><th>관제 명령</th><th>LED A (키트 LED0)</th><th>LED B (키트 LED1)</th><th>변경 원인</th></tr></thead><tbody><tr><td><b>양호</b></td><td>계속 켜짐</td><td>꺼짐</td><td rowspan="4">PC → UART 명령 수신<br><b>초음파 위치로 자동 변경하지 않음</b></td></tr><tr><td><b>경계</b></td><td>깜빡임</td><td>꺼짐</td></tr><tr><td><b>위험</b></td><td>깜빡임</td><td>깜빡임</td></tr><tr><td><b>도착</b></td><td>계속 켜짐</td><td>계속 켜짐</td></tr></tbody></table></div>
+<div class="notice"><strong>서로 독립적인 네 가지 상태</strong><p>① 위치: 복도 센서 결과 / ② LED: 관제 명령 / ③ 부저: S5 접근 판정 / ④ 문: 도착 명령·키패드 이벤트·서보 보정과 문 상태. 예를 들어 관제 명령이 ‘양호’라도 S5가 매우 위험한 지점의 접근을 검출하면 부저가 울린다.</p></div>
+<p><b>1차 범위 밖:</b> 사람 수 계수, 여러 물체의 신원 유지, LD2450, 소형 e-Ink 추가 구매, 물체가 스스로 이동하는 로봇 기능. 우드락·스티로폼은 직접 준비하고, 보유 점퍼 케이블을 사용한다.</p></section>
+
+<section id="architecture"><div class="sectionhead"><div><span class="secno">02 / ARCHITECTURE</span><h2>장비와 데이터는 이렇게 연결한다</h2></div><span class="badge proposal">구현된 통합 구조</span></div>
+<div class="boardflow"><div class="board"><b>PC</b><small>하이퍼터미널<br>관제 명령 / 상태 로그</small></div><div class="arrow"><small>USB ↔ 키트 UART</small>↔</div><div class="board primary"><b>STM32F103RBT6</b><small>초음파·좌표·LED·부저·키패드·문<br>USART1 / USART3</small></div><div class="arrow"><small>3.3V TTL UART</small>↔</div><div class="board"><b>ESP32-L</b><small>위치 수신 / 지도 그리기<br>화면 갱신 관리</small></div><div class="arrow"><small>SPI</small>→</div><div class="board"><b>DESPI-C02 + e-Ink</b><small>800 × 480 빌드 대상<br>GDEY075Z08</small></div></div>
+<div class="cols3"><div class="card"><h3>STM32에 붙는 것</h3><p>초음파 5개, 기존 키패드, 기존 LED 2개, 기존 PIEZO, 외장 SG90 1개. 하이퍼터미널과 ESP32는 서로 다른 UART를 사용한다.</p></div><div class="card"><h3>ESP32에 붙는 것</h3><p>DESPI-C02의 SPI·제어 신호와 STM32 통신선. <b>화면용 SPI는 STM32가 아니라 ESP32에서 출력한다.</b> Wi-Fi는 MVP에 필요하지 않다.</p></div><div class="card"><h3>브레드보드 1개의 역할</h3><p>주로 초음파센서 전원·GND 분배와 연결 시험에 사용한다. 센서의 TRIG/ECHO는 보유 케이블로 MCU에 직접 연결할 수 있다. 모터의 큰 전류를 반드시 이 보드로 흘리는 구조는 아니다.</p></div></div>
+<div class="notice warn"><strong>PC에 연결하는 USB 두 종류를 구분한다.</strong><p>STM32 MCU 모듈의 USB는 기존 DFU 다운로드에 사용한다. 하이퍼터미널은 <b>키트 UART 모듈의 USB-to-Serial 포트</b>에 연결한다. 교수님 제공 ESP32의 USB는 ESP32의 펌웨어 다운로드·전원용이며, STM32와의 실제 데이터선은 별도 UART 두 선이다.</p></div>
+<p class="source">수업자료: 「01_GPIO_Output.pptx」의 IAR/DFU 절차, 「실험5-UART-with 과제.pdf」13~17쪽. 공식 DESPI-C02는 SPI 어댑터이며 3.3V로 동작한다. <a href="#src-lesson">[L2]</a><a href="#src-despi">[W2]</a></p></section>
+
+<section id="demo"><div class="sectionhead"><div><span class="secno">03 / BEHAVIOR PREVIEW</span><h2>동작을 분리해서 확인하는 미리보기</h2></div><span class="badge proposal">설명용 모의 화면 · 실제 회로 아님</span></div><p>배치는 <b>복도 4구간의 예시</b>이며 공학4호관의 실제 평면도나 확정 모형 치수가 아니다. 위치 슬라이더, 관제 명령, S5 입력을 각각 바꿔 독립 동작을 확인할 수 있다.</p>
+<div class="demo"><div class="mapbox"><div class="maptitle"><strong>관제소 e-Ink 표시 개념</strong><span>벽·복도 검정 / 위치 흰 점 / 위험 빨강</span></div>
+<svg viewBox="0 0 800 480" role="img" aria-labelledby="mapLabel mapDesc"><title id="mapLabel">직선 복도 네 개로 이루어진 위치 표시 예시</title><desc id="mapDesc">출발점에서 세 번 직각으로 꺾어 목적지에 도달하는 경로. 위험구역은 경로 옆 빨간 경계로 표시한다.</desc>
+<rect width="800" height="480" fill="#fff"/><rect x="42" y="45" width="716" height="387" rx="5" fill="none" stroke="#1c252a" stroke-width="4"/>
+<path d="M100 110 H650 V250 H270 V385" fill="none" stroke="#1d252b" stroke-width="64" stroke-linejoin="miter"/>
+<g fill="#1d252b" font-family="sans-serif" font-size="16"><text x="80" y="73">출발</text><text x="310" y="73">복도 1</text><text x="697" y="185">복도 2</text><text x="305" y="299">복도 3</text><text x="165" y="354">복도 4</text><text x="302" y="405">목적지 · 문 1개</text></g>
+<path d="M395 209 H570 M395 291 H570" stroke="#c52727" stroke-width="5" fill="none" stroke-dasharray="9 5"/>
+<g fill="#b12323" font-family="sans-serif"><text x="408" y="188" font-size="18" font-weight="bold">위험구역</text><text x="437" y="331" font-size="13">S5: 매우 위험한 지점</text></g>
+<g fill="#e8eff2" stroke="#27383f" stroke-width="2"><rect x="58" y="99" width="25" height="22"/><rect x="639" y="57" width="22" height="25"/><rect x="690" y="239" width="25" height="22"/><rect x="259" y="414" width="22" height="15"/></g>
+<g fill="#28383f" font-size="12" font-family="sans-serif"><text x="59" y="94">S1 →</text><text x="664" y="73">S2 ↓</text><text x="690" y="232">← S3</text><text x="291" y="425">↑ S4</text></g>
+<path d="M480 311 L471 324 H489 Z" fill="#bf3030"/>
+<line id="doorDrawing" x1="238" y1="390" x2="300" y2="390" stroke="#596e76" stroke-width="8"/>
+<circle id="workerDot" cx="110" cy="110" r="12" fill="#fff" stroke="#111" stroke-width="3"/>
+</svg><div class="mapcaption">경로 위의 흰 점이 보이도록 검은 경로를 사용한 예시. 빨간 표시는 이동점의 부분 갱신 창과 겹치지 않게 배치한다. 센서 그림은 논리적 담당 구역만 표시하며 실제 설치 위치는 잔향·가림 시험 후 확정한다.</div></div>
+<div class="control"><h3>관제 명령 (UART 모의 입력)</h3><div class="commands"><button class="cmd" data-state="safe">양호</button><button class="cmd" data-state="caution">경계</button><button class="cmd" data-state="danger">위험</button><button class="cmd" data-state="arrived">도착</button></div><div class="ledpanel"><div class="led-item"><span id="ledA" class="led"></span>LED A</div><div class="led-item"><span id="ledB" class="led"></span>LED B</div><div><div id="ledText" class="readout">명령 대기</div><small style="color:#b8d0d8">위치와 독립적으로 변경</small></div></div>
+<label class="sl" for="position">물체 위치 이동 <span id="positionText" class="muted">복도 1</span><input id="position" type="range" min="0" max="1000" value="0"></label>
+<div class="alarmbox" id="alarmBox"><label><input id="hazard" type="checkbox">S5 접근 감지 모의 입력</label><div id="alarmText"><b>부저 OFF</b> · 매우 위험 지점 이탈</div></div>
+<button id="doorButton" class="doorbtn">키패드 숫자 0 입력</button><p id="doorText" class="demohint">닫힘. 서보를 보정한 모형을 가정한다. 관제 명령 ‘도착’을 고른 뒤 숫자 0을 누른다.</p>
+<p class="demohint">점의 움직임과 LED 점멸은 브라우저 설명용이다. 실제 e-Ink 갱신 시간이나 초음파 정확도를 재현하지 않는다. 부저 소리는 재생하지 않는다.</p></div></div></section>
+
+<section id="stm-pins"><div class="sectionhead"><div><span class="secno">04 / STM32 PIN MAP</span><h2>STM32 실제 연결 계획</h2></div><span class="badge proposal">구현 핀 배정</span></div>
+<p>핀 이름은 <b>MCU 모듈에 표시된 PAx·PBx·PCx 신호명</b>이다. 칩의 물리적인 다리 번호나 헤더의 몇 번째 구멍이라는 뜻이 아니다. 포트의 인쇄 표기와 케이블 방향을 대조해 연결한다.</p>
+<div class="notice red"><strong>전원 확인 전 센서 ECHO를 연결하지 않는다.</strong><p>이 안은 HC-SR04P를 <b>3.3V로 공급하고 ECHO가 3.3V 수준임을 실측</b>하는 조건이다. 특히 복도 ECHO에 쓰는 PA0~PA3은 ST 표에서 5V-tolerant(FT) 핀으로 표시되어 있지 않다. 센서를 5V로 구동하거나 다른 HC-SR04로 교체하면 입력 전압을 다시 검토하고 필요한 레벨 변환 후 연결한다.</p></div>
+<p class="source">PA0~PA3, PA6, PA8, PB6 및 USART 핀 기능은 ST 데이터시트 Table 5와 실습 핀 표를 대조했다. 실제 센서 출력 전압은 제품명만으로 보증하지 않는다. <a href="#src-st">[W3]</a><a href="#src-sensor">[W5]</a><a href="#src-lesson">[L2]</a></p>
+<div class="findrow noprint"><input class="search" id="pinSearch" type="search" placeholder="핀·부품 검색: 예) PC1, ECHO, 키패드" aria-label="핀 연결표 검색"><span id="pinCount" class="small">25개 신호</span><button class="outline-btn" id="copyPins">배선표 복사</button></div>
+<div class="tablewrap"><table class="pin-table" id="pinTable"><thead><tr><th>대상</th><th>STM32 핀</th><th>방향</th><th>설정 / 기능</th><th>연결 상대</th><th>역할</th><th>주의사항</th></tr></thead><tbody><tr><td>PC UART</td><td>PA9</td><td>출력</td><td>USART1_TX</td><td>키트 UART 모듈 TX0</td><td>PC로 응답·로그 전송</td><td>수업 결선 유지</td></tr>
+<tr><td>PC UART</td><td>PA10</td><td>입력</td><td>USART1_RX</td><td>키트 UART 모듈 RX0</td><td>하이퍼터미널 관제 명령 수신</td><td>수업 결선 유지</td></tr>
+<tr><td>보드 간 UART</td><td>PB10</td><td>출력</td><td>USART3_TX</td><td>ESP32-L P6-9 SDA / GPIO21 (UART2_RX)</td><td>위치·상태 전송</td><td>3.3V TTL, 115200bps</td></tr>
+<tr><td>보드 간 UART</td><td>PB11</td><td>입력</td><td>USART3_RX</td><td>ESP32-L P6-10 SCL / GPIO22 (UART2_TX)</td><td>READY·ERROR 수신</td><td>STM32 GND ↔ ESP32-L P6-7</td></tr>
+<tr><td>복도 센서 S1</td><td>PC8</td><td>출력</td><td>GPIO Out_PP</td><td>S1 TRIG</td><td>복도 1 거리 측정 시작</td><td>1회에 센서 하나만 송신</td></tr>
+<tr><td>복도 센서 S1</td><td>PA0</td><td>입력</td><td>TIM2_CH1 입력 캡처</td><td>S1 ECHO</td><td>복도 1 Echo 펄스 폭 측정</td><td>3.3V 수준 확인 후 연결</td></tr>
+<tr><td>복도 센서 S2</td><td>PC9</td><td>출력</td><td>GPIO Out_PP</td><td>S2 TRIG</td><td>복도 2 거리 측정 시작</td><td>동시 송신 금지</td></tr>
+<tr><td>복도 센서 S2</td><td>PA1</td><td>입력</td><td>TIM2_CH2 입력 캡처</td><td>S2 ECHO</td><td>복도 2 Echo 펄스 폭 측정</td><td>3.3V 수준 확인 후 연결</td></tr>
+<tr><td>복도 센서 S3</td><td>PC10</td><td>출력</td><td>GPIO Out_PP</td><td>S3 TRIG</td><td>복도 3 거리 측정 시작</td><td>USART3를 PC10/11로 remap하지 않음</td></tr>
+<tr><td>복도 센서 S3</td><td>PA2</td><td>입력</td><td>TIM2_CH3 입력 캡처</td><td>S3 ECHO</td><td>복도 3 Echo 펄스 폭 측정</td><td>USART2는 사용하지 않음</td></tr>
+<tr><td>복도 센서 S4</td><td>PC11</td><td>출력</td><td>GPIO Out_PP</td><td>S4 TRIG</td><td>복도 4 거리 측정 시작</td><td>USART3 기본 PB10/11 유지</td></tr>
+<tr><td>복도 센서 S4</td><td>PA3</td><td>입력</td><td>TIM2_CH4 입력 캡처</td><td>S4 ECHO</td><td>복도 4 Echo 펄스 폭 측정</td><td>3.3V 수준 확인 후 연결</td></tr>
+<tr><td>위험 센서 S5</td><td>PC12</td><td>출력</td><td>GPIO Out_PP</td><td>S5 TRIG</td><td>매우 위험한 지점 접근 측정</td><td>복도 위치 추정과 별도 판단</td></tr>
+<tr><td>위험 센서 S5</td><td>PB6</td><td>입력</td><td>TIM4_CH1 입력 캡처</td><td>S5 ECHO</td><td>위험지점 Echo 펄스 폭 측정</td><td>USART1 remap하지 않음</td></tr>
+<tr><td>LED A</td><td>PA4</td><td>출력</td><td>GPIO Out_PP</td><td>키트 LED0</td><td>첫 번째 상태 LED</td><td>기존 LED 모듈 사용</td></tr>
+<tr><td>LED B</td><td>PA5</td><td>출력</td><td>GPIO Out_PP</td><td>키트 LED1</td><td>두 번째 상태 LED</td><td>STM32 SPI1은 사용하지 않음</td></tr>
+<tr><td>PIEZO</td><td>PA6</td><td>출력</td><td>TIM3_CH1 / AF_PP</td><td>키트 PIEZO 신호 입력</td><td>위험 접근 경고음</td><td>수업 PWM 핀 유지; 모터와 타이머 분리</td></tr>
+<tr><td>문 서보</td><td>PA8</td><td>출력</td><td>TIM1_CH1 / AF_PP</td><td>SG90 Signal</td><td>키패드 0 이벤트에 문 1개 개방</td><td>전원은 GPIO가 아닌 별도 5V 전원선</td></tr>
+<tr><td>키패드 열 C0</td><td>PC0</td><td>입력</td><td>GPIO 입력</td><td>키트 Keypad C0</td><td>열 0의 눌림 읽기</td><td>수업 배선 유지</td></tr>
+<tr><td>키패드 열 C1</td><td>PC1</td><td>입력</td><td>GPIO 입력</td><td>키트 Keypad C1</td><td>열 1의 눌림 읽기</td><td>숫자 0은 마지막 행·가운데 열</td></tr>
+<tr><td>키패드 열 C2</td><td>PC2</td><td>입력</td><td>GPIO 입력</td><td>키트 Keypad C2</td><td>열 2의 눌림 읽기</td><td>기존 모듈 회로·입력 설정 유지</td></tr>
+<tr><td>키패드 행 R0</td><td>PC3</td><td>출력</td><td>활성 행만 Out_PP / 나머지 Hi-Z</td><td>키트 Keypad R0</td><td>행 0 스캔</td><td>스캔 중 한 행만 활성화</td></tr>
+<tr><td>키패드 행 R1</td><td>PC4</td><td>출력</td><td>활성 행만 Out_PP / 나머지 Hi-Z</td><td>키트 Keypad R1</td><td>행 1 스캔</td><td>스캔 중 한 행만 활성화</td></tr>
+<tr><td>키패드 행 R2</td><td>PC5</td><td>출력</td><td>활성 행만 Out_PP / 나머지 Hi-Z</td><td>키트 Keypad R2</td><td>행 2 스캔</td><td>스캔 중 한 행만 활성화</td></tr>
+<tr><td>키패드 행 R3</td><td>PC6</td><td>출력</td><td>활성 행만 Out_PP / 나머지 Hi-Z</td><td>키트 Keypad R3</td><td>행 3 스캔</td><td>PC6 활성 + PC1 감지 → 숫자 0</td></tr></tbody></table></div>
+<div class="cols"><div class="card"><h3>키트 UART 표기 주의</h3><p>실습자료는 <b>PA9 → UART 모듈 TX0, PA10 → RX0</b>로 명시한다. 이 키트의 표기를 일반 외부 모듈의 TX/RX 표기와 혼동해 임의로 뒤집지 않는다. 실제 신호는 ‘STM32 TX → 변환기 입력’, ‘변환기 출력 → STM32 RX’가 되어야 한다.</p><p class="source"><a href="#src-lesson">[L2: UART 자료 15쪽]</a></p></div><div class="card"><h3>서보·부저·LED가 충돌하지 않게</h3><p>서보는 <b>PA8 / TIM1</b>, 부저는 <b>PA6 / TIM3</b>, LED는 <b>PA4·PA5</b>로 분리한다. 예전 LED 실습처럼 PA0~PA7 전체를 덮어쓰거나 출력으로 초기화하면 초음파 입력과 부저 핀까지 손상된 설정이 되므로 해당 코드 그대로 사용하지 않는다.</p></div></div>
+<details><summary>쓰지 않는 핀과 재할당(remap) 제한</summary><p><b>사용 금지 범위:</b> 수업자료에서 USB·디버그·오실레이터 등으로 예약한 PA11~PA15, PB3~PB4, PC14~PC15, PD0~PD2는 건드리지 않는다. PB2도 부팅 설정과 관련 있으므로 이 안에서는 비운다.</p><p><b>기본 매핑 유지:</b> USART1은 PA9/PA10, USART3는 PB10/PB11, TIM1/2/3/4는 기본 핀 배정이다. USART3를 PC10/PC11로 remap하면 S3·S4 TRIG와 충돌한다. TIM3를 PC6~PC9로 remap하면 키패드·TRIG와 충돌한다.</p><p><b>예약하지 않은 여유 핀:</b> PA7, PB0·PB1·PB5·PB7~PB9·PB12~PB15, PC7 등은 확장용으로 남긴다. 여유 핀의 실제 사용도 보드 회로와 대조해야 한다.</p></details>
+</section>
+
+<section id="esp-pins"><div class="sectionhead"><div><span class="secno">05 / ESP32 & DISPLAY</span><h2>ESP32와 e-Ink의 연결</h2></div><span class="badge ok">ESP32-L · DESPI-C02 사진 확인</span></div>
+<p>지급 보드 사진의 <b>ESP32-L</b>, 어댑터 사진의 <b>DESPI-C02</b> 표기를 제조사 회로도와 대조했다. 보드 간 통신선은 P6에 연결하고 화면 신호는 전용 P5에서 출력한다. ESP32-L의 USB 직렬 포트는 펌웨어 다운로드·진단에 사용한다.</p>
+<div class="tablewrap"><table><thead><tr><th>연결 상대</th><th>상대 신호</th><th>ESP32-L 헤더 / GPIO</th><th>용도</th></tr></thead><tbody>
+<tr><td>STM32 PB10</td><td>USART3_TX</td><td>P6-9 · SDA / GPIO21</td><td>UART2 RX, 3.3V TTL 입력</td></tr><tr><td>STM32 PB11</td><td>USART3_RX</td><td>P6-10 · SCL / GPIO22</td><td>UART2 TX, 3.3V TTL 출력</td></tr><tr><td>STM32 GND</td><td>GND</td><td>P6-7 · GND</td><td>두 보드의 공통 기준 전위</td></tr>
+<tr><td>DESPI-C02 P2-1</td><td>3.3V</td><td>P5-1 · 3.3V</td><td>화면 전원</td></tr><tr><td>DESPI-C02 P2-2</td><td>GND</td><td>P5-2 · GND</td><td>화면 전원·신호 기준</td></tr><tr><td>DESPI-C02 P2-3</td><td>SDI</td><td>P5-3 · GPIO23</td><td>SPI MOSI 출력</td></tr><tr><td>DESPI-C02 P2-4</td><td>SCK</td><td>P5-4 · GPIO18</td><td>SPI 클록 출력</td></tr><tr><td>DESPI-C02 P2-5</td><td>CS</td><td>P5-5 · GPIO27</td><td>Low에서 선택</td></tr><tr><td>DESPI-C02 P2-6</td><td>D/C</td><td>P5-6 · GPIO14</td><td>명령/데이터 선택</td></tr><tr><td>DESPI-C02 P2-7</td><td>RES</td><td>P5-7 · GPIO12</td><td>Low 리셋</td></tr><tr><td>DESPI-C02 P2-8</td><td>BUSY</td><td>P5-8 · GPIO13</td><td>Low 구동 중, HIGH 준비</td></tr></tbody></table></div>
+<div class="notice warn"><strong>P6의 SDA/SCL 표기와 P5의 신호 이름을 기준으로 결선한다.</strong><p>GPIO21·22는 펌웨어에서 UART2로 지정한다. 기판에 함께 연결된 플래시·폰트 칩은 부팅 후 GPIO2·15를 HIGH로 두어 SPI 통신 중 선택되지 않게 한다.</p></div>
+<p class="source"><a href="#src-despi">[W2: 어댑터]</a><a href="#src-esp">[W4: UART·SPI]</a><a href="#src-board">[W6: ESP32-L 공식 회로도]</a></p>
+<details open><summary>화면 펌웨어의 실제 핀 설정</summary><p><code>ControlRoom.ino</code>에서 보드 간 UART를 설정하고 <code>panel.cpp</code>에서 GPIO와 SPI를 초기화한다. Good Display 드라이버의 보드 핀 대응은 컴파일 시 검사한다.</p>
+<pre><code>Serial2.begin(115200, SERIAL_8N1, 21, 22);  // RX, TX
+SPI.begin(18, 19, 23, -1);                 // SCK, MISO, MOSI, CS는 별도 제어
+// BUSY=13, RES=12, DC=14, CS=27 · SPI Mode 0, 10 MHz</code></pre>
+
+
+
+<p>FPC는 전원을 끈 상태에서 연결한다. 사진의 리본 표기는 FPC-C001이다. 소프트웨어 대상은 계획서의 <b>GDEY075Z08</b>이며 최초 구동 전 지급 명세 또는 패널 모델 라벨을 대조한다. 이 모델의 DESPI-C02 RESE 설정은 <b>0.47 Ω</b>이다.</p><p class="source"><a href="#src-panel">[W1]</a><a href="#src-rese">[W8: 제조사 RESE 표 §4.3]</a></p></details>
+</section>
+
+<section id="power"><div class="sectionhead"><div><span class="secno">06 / POWER FIRST</span><h2>전원과 접지는 신호선보다 먼저 확인</h2></div><span class="badge pending">전원 출력 위치·허용 전류 미확인</span></div>
+<div class="tablewrap"><table><thead><tr><th>전원 영역</th><th>공급 대상</th><th>계획</th><th>진행 조건</th></tr></thead><tbody>
+<tr><td><b>키트 기존 전원</b></td><td>STM32, 키패드, LED, PIEZO, UART 모듈</td><td>기존 수업 연결 유지</td><td>사용하지 않는 주변 모듈의 배선과 소비 전류도 확인</td></tr>
+<tr><td><b>센서 3.3V 분배</b></td><td>HC-SR04P S1~S5</td><td>검증된 3.3V 출력 → 브레드보드 센서 전원 레일 → 각 VCC</td><td>5개 합계 전류, 전압 강하, ECHO 출력 수준을 측정</td></tr>
+<tr><td><b>서보 5V 계열 전원</b></td><td>SG90 VCC</td><td>키트의 5V 출력이 충분할 때 그 전원을 사용</td><td>기동·부하 시 전압 강하와 허용 전류 확인. 부족하면 실습실 전원 등 보완안 필요</td></tr>
+<tr><td><b>ESP32-L 전원</b></td><td>ESP32-L과 화면 회로</td><td>제조사 지정 USB Type-C 5V 입력</td><td>STM32 전원과 공통 GND 연결</td></tr>
+<tr><td><b>화면 3.3V</b></td><td>DESPI-C02 → e-Ink</td><td>ESP32-L P5-1 → DESPI-C02 P2-1</td><td>갱신 시 실제 전압·전류 확인</td></tr>
+<tr><td><b>공통 접지</b></td><td>STM32·ESP32·초음파·서보·화면 GND</td><td>신호 기준을 동일하게 연결</td><td>서보 전류 귀환선은 센서의 가는 GND 배선에 연속 직렬 연결하지 않음</td></tr>
+</tbody></table></div>
+<div class="cols"><div class="card"><h3>브레드보드에는 3.3V와 GND를 우선 배정</h3><p>브레드보드는 전압을 만드는 장치가 아니라 접점을 연결하는 도구다. <b>3.3V와 5V를 같은 전원 레일에 연결하지 않는다.</b> 전원 레일이 중간에 끊긴 제품인지 테스터로 확인하고 라벨을 붙인다.</p></div><div class="card"><h3>서보 전원선은 구분</h3><p>SG90의 Signal만 PA8에 연결한다. VCC는 검증된 전원, GND는 공통 접지로 연결한다. 모터 전원 경로는 브레드보드의 불명확한 접점 허용 전류에 의존하지 않고 적합한 전원 단자·배선을 우선 사용한다.</p></div></div>
+<p>외장 어댑터를 추가 구매하지 않기로 한 것은 <b>키트 전원으로 반드시 충분하다고 확인한 뜻이 아니다.</b> 전원 검증 전에는 서보와 센서를 모두 연결해 전원을 넣지 않는다. 서보의 3.3V 제어 신호 인식 여부도 수령한 호환품에서 단품 확인한다.</p>
+<p class="source">DESPI-C02 3.3V, HC-SR04P의 판매처 동작 전압 설명, STM32 입력 전압 조건을 근거로 한 결선 계획. 특정 키트의 여유 전류를 추정해 수치로 넣지 않았다. <a href="#src-despi">[W2]</a><a href="#src-sensor">[W5]</a><a href="#src-st">[W3]</a></p>
+</section>
+
+<section id="runtime"><div class="sectionhead"><div><span class="secno">07 / RUNTIME & PROTOCOL</span><h2>화면이 느려도 측정·경고는 멈추지 않게</h2></div><span class="badge proposal">펌웨어 설정</span></div>
+<div class="tablewrap"><table><thead><tr><th>자원</th><th>담당</th><th>펌웨어 설정</th><th>분리하는 이유</th></tr></thead><tbody>
+<tr><td>TIM1_CH1</td><td>PA8, SG90</td><td>서보 보정 후 50Hz, 1μs tick일 때 PSC=71, ARR=19999</td><td>부저 주파수를 바꿔도 문 각도 제어의 주기가 변하지 않게</td></tr>
+<tr><td>TIM2_CH1~4</td><td>PA0~3, 복도 Echo</td><td>1MHz free-running; PSC=71, ARR=65535</td><td>4개 채널은 같은 카운터를 공유하되 각 입력 에지를 기록</td></tr>
+<tr><td>TIM3_CH1</td><td>PA6, PIEZO</td><td>PIEZO 실습의 1024Hz 기준 PWM</td><td>서보와 별도 타이머로 경고음 ON/OFF</td></tr>
+<tr><td>TIM4_CH1</td><td>PB6, 위험 Echo</td><td>1MHz free-running; PSC=71, ARR=65535</td><td>위험 센서의 캡처와 경보 처리를 분리해 관리</td></tr>
+<tr><td>SysTick</td><td>소프트웨어 1ms 시간 기준</td><td>LED 점멸, 키패드 스캔, 측정 스케줄·timeout</td><td>메인 루프에 긴 delay를 넣지 않음</td></tr>
+<tr><td>USART1 / USART3</td><td>PC / ESP32</td><td>송수신 인터럽트와 비차단 큐</td><td>화면 응답이나 PC 입력을 기다리며 제어를 멈추지 않음</td></tr>
+</tbody></table></div>
+<p class="small">72MHz 타이머 클록을 기준으로 한 PSC 예시다. 펌웨어는 SPL <code>RCC_GetClocksFreq</code>로 읽은 HCLK·PCLK와 APB 배율로 분주값을 계산한다. TIM1 PWM은 보정된 두 펄스 폭이 있을 때만 MOE를 활성화한다. <code>t_ms</code>는 STM32 기동 후 경과 밀리초이며, 센서 슬롯·점멸·화면 지연은 실물에서 측정한다.</p>
+<p class="source"><a href="#src-st">[W3: clock tree, Table 5]</a><a href="#src-system">[L4: System_func.c / TIM 라이브러리]</a></p>
+<div class="cols"><div><h3>PC → STM32 관제 명령</h3><p><span class="badge proposal">구현된 입력</span> 수업 설정과 같은 <b>9600bps / 8N1 / 흐름제어 없음</b>이다. 대문자 ASCII 명령을 한 줄씩 보낸다.</p><pre><code>SAFE\r\n       → 양호
+CAUTION\r\n    → 경계
+DANGER\r\n     → 위험
+ARRIVED\r\n    → 도착 허가
+RAW\r\n        → R,S1,S2,S3,S4,S5</code></pre><p class="small">네 관제 명령은 OK로 응답한다. RAW는 다섯 센서의 마지막 거리(mm)를 돌려준다. 미측정·무효 ECHO는 -1이다. CR, LF, CRLF를 처리한다. 잘못된 명령은 ERR COMMAND, 현재 LED 상태는 유지한다. 점멸은 500ms 켜짐 / 500ms 꺼짐이다.</p></div>
+<div><h3>STM32 ↔ ESP32 위치·상태</h3><p><span class="badge ok">구현된 프레임</span> <b>115200bps / 8N1</b>로 위치와 관제·경보·문 상태를 전송한다.</p><pre><code>P,seq,t_ms,corridor,x_mm,y_mm,valid\r\n
+S,command,alarm,door\r\n
+// ESP32 → STM32: READY 또는 ERROR
+</code></pre><p class="small">P의 구간은 1~4이며, 위치 미확인은 구간·좌표·valid를 모두 0으로 보낸다. S의 command는 NONE/SAFE/CAUTION/DANGER/ARRIVED, alarm은 UNKNOWN/CLEAR/ACTIVE/FAULT/ACTIVE_FAULT, door는 UNSET/CLOSED/OPEN이다. ESP32는 입력을 검증하고 최신값을 보관한다. STM32는 READY 응답을 기다리지 않고 측정·전송한다.</p></div></div>
+<details><summary>입력 캡처와 timeout 구현 주의</summary><p>TIM2/4는 센서마다 정지·초기화하지 않는 free-running counter로 사용한다. 각 채널에서 상승 에지 시각을 기록하고 하강 에지로 전환해 펄스 폭을 구하는 방식을 사용한다. 이 안은 센서마다 채널 두 개를 쓰는 PWM-input reset mode가 아니라 <b>채널 하나에서 극성을 전환하는 입력 캡처</b>이다.</p><p>1MHz·16비트 카운터는 65.536ms마다 순환하므로, 한 번의 순환 이내에서 <code>dt_us = (uint16_t)(fall - rise)</code>로 계산하고 그보다 짧은 timeout을 둔다. Echo 없음·High 고착·범위 밖은 거리 0이 아니라 <b>INVALID</b>로 처리한다. timeout 후 해당 측정을 정리하고 다음 슬롯으로 진행한다.</p><p>ISR에서는 캡처값 저장과 이벤트 표시만 하고, 로그 출력·e-Ink 갱신·오래 걸리는 계산은 하지 않는다. 기존 타이머 delay 예제가 TIM2/3을 끄는 부분은 통합 코드에 그대로 가져오지 않는다.</p></details>
+<details><summary>센서 순차 측정과 초기 타이밍</summary><pre><code>S5 → S1 → S5 → S2 → S5 → S3 → S5 → S4 → 반복</code></pre><p>센서가 서로의 초음파를 받지 않도록 한 번에 하나만 송신한다. <b>슬롯을 60ms로 설정</b>하면 위험지점은 약 120ms마다, 각 복도는 약 480ms마다 갱신된다. 이 값은 <b>HC-SR04P의 보장 사양이 아니라 잔향·간섭 시험을 시작하기 위한 제안값</b>이다. Echo timeout 30ms와 TRIG 약 10μs 역시 수령품 동작을 확인해 확정한다.</p><p>이 경우 감지·부저 반응에는 센서 대기와 필터 지연이 있고 e-Ink에는 별도 갱신 지연이 더해진다. 따라서 ‘지연 0’이나 ‘1ms 경고’를 보장하지 않는다.</p><p class="source">다중 초음파 상호 간섭과 순차 구동의 일반 원리는 제조사 자료를 참고했다. MaxBotix의 제품별 핀·타이밍을 HC-SR04P에 그대로 적용한 것은 아니다. <a href="#src-multi">[W7]</a></p></details>
+</section>
+
+<section id="tracking"><div class="sectionhead"><div><span class="secno">08 / CONTROL LOGIC</span><h2>좌표 추정·위험 경보·문 제어</h2></div><span class="badge proposal">구현된 동작</span></div>
+<h3>1. 초음파 거리에서 복도 위 좌표로</h3><p>이 프로젝트는 임의 공간의 사람 위치를 자유롭게 찾는 시스템이 아니라, <b>알려진 직선 통로를 따라 움직이는 물체 1개의 위치를 추정</b>하는 시스템이다. 각 복도의 시작점, 길이, 방향, 센서 설치점과 offset을 먼저 측정해 저장한다.</p>
+<pre><code>거리 근사: d_mm ≈ 343 × Echo_시간(μs) / 2000   // 음속 343m/s를 사용한 계산 예
+좌표:      p = p_sensor + (d_mm + offset) × u_corridor
+화면: 각 복도의 보정 거리 비율을 모식도 해당 구간의 길이에 대응
+           S1·S3 수평 / S2·S4 수직, +x 오른쪽, +y 아래쪽</code></pre><p class="small">음속 고정값은 초기 근사이며 온도·실물 보정이 필요하다. 초음파가 측정하는 것은 물체의 반사면까지 거리이므로, 점이 물체 중심을 뜻하려면 일정한 표적 형상과 방향 또는 별도의 보정이 필요하다. 화면 y축 방향도 좌표계 변환에 포함한다.</p>
+<div class="cols"><div class="card"><h3>어느 복도에 있는지</h3><p>빈 복도에서 읽는 배경 거리를 저장한다. 새 측정이 빈 복도보다 설정 여유 이상 가깝고 통로 길이 안에 있을 때 후보로 잡는다. 이전 복도·인접 복도 관계, 이동량, 측정 시각으로 후보를 선택한다.</p><p><b>5개 값 중 가장 짧은 거리를 고르는 방식은 쓰지 않는다.</b> S5는 위치 후보 선정이 아니라 별도의 위험 접근 감지에 사용한다.</p></div><div class="card"><h3>코너와 가림 구간</h3><p>90도 모서리에서는 두 센서에 보이거나 어느 센서에도 안 보일 수 있다. 모형은 물체가 센서 시선 밖으로 크게 벗어나지 않게 만들고, 중복·무검출 구간을 실제로 측정한다.</p><p>확신이 없으면 마지막 위치를 ‘현재 위치’처럼 유지하지 않고 <b>위치 미확인 / 마지막 측정 경과시간</b>을 표시한다. 신뢰성은 통로 단품 시험을 통과한 뒤 판단한다.</p></div></div>
+<h3>2. S5 위험 접근 경보</h3><p>접근 기준 <code>D_on</code>, 해제 기준 <code>D_off</code>를 구분하고 <code>D_off &gt; D_on</code>으로 둔다. 설정된 연속 횟수만큼 접근이나 이탈을 검출하면 부저를 켜거나 끈다. 거리·필터 수치는 모형에서 정하며 임의의 확정값으로 넣지 않는다.</p>
+<div class="notice red"><strong>S5가 응답하지 않으면 오류를 보고한다.</strong><p>실측 보정 전 경보 상태는 UNKNOWN이다. 보정 후 측정 오류는 FAULT이며 이미 울리던 중에는 ACTIVE_FAULT로 전송하고 부저음을 유지한다. 이 장치는 교육용 모형이다.</p></div>
+<h3>3. 목적지 문 하나 열기</h3><p><b>확정:</b> 도착 후 키패드 <b>숫자 0</b>을 누르면 SG90으로 문을 연다. 별도 스위치 모듈의 BT0가 아니다. 키패드는 디바운싱 후 ‘눌림 에지’ 한 번만 처리하고 길게 눌렀다고 모터 동작을 반복하지 않는다.</p>
+<div class="tablewrap"><table><thead><tr><th>항목</th><th>현재 동작</th></tr></thead><tbody><tr><td>모터</td><td>SG90 1개. 문은 별도 경첩이 지지하고 혼과 연결부가 힘을 전달한다.</td></tr><tr><td>보정</td><td>무부하 시험으로 닫힘·열림 펄스 폭을 site_profile.h에 입력한다. 미보정은 UNSET이며 PA8에는 서보 펄스를 출력하지 않는다.</td></tr><tr><td>도착과 개방</td><td>관제자가 ARRIVED를 보낸 상태에서 디바운싱된 새 숫자 0 입력을 받으면 한 번 연다. 슬라이더 위치나 자동 좌표는 개방 허가 조건에 쓰지 않는다.</td></tr><tr><td>다시 시연</td><td>문은 열린 상태를 유지한다. 보정된 상태에서 보드를 리셋하면 닫힘 목표로 시작한다. OPEN/CLOSED는 펌웨어가 명령한 목표다.</td></tr></tbody></table></div>
+</section>
+
+<section id="display"><div class="sectionhead"><div><span class="secno">09 / DISPLAY IMPLEMENTATION</span><h2>전자종이 펌웨어와 화면 갱신</h2></div><span class="badge pending">표시 속도·잔상은 실물 검증</span></div>
+<div class="cols"><div class="card"><h3>제조사 드라이버와 프로젝트 코드</h3><p><code>esp32/build.ps1</code>은 Good Display 공식 ESP32epdx의 고정 커밋에서 GDEY075Z08 전용 <code>EPD.cpp</code>·SPI·GUI를 가져온다. <code>ControlRoom.ino</code>는 UART 수신과 화면 상태를 관리하고, <code>panel.cpp</code>가 지도·빨간 표지·위치점을 그린다.</p><p class="source"><a href="#src-code">[L3: 실제 빌드에 사용한 제조사 예제]</a></p></div><div class="card"><h3>갱신 특성</h3><p>공식 GDEY075Z08 사양은 25℃에서 전체 약 <b>18초</b>, 빠른 갱신 약 <b>12초</b>, 흑백 부분 갱신 약 <b>1.5초</b>다. 현재 펌웨어는 일반 전체 갱신과 흑백 부분 갱신을 사용한다. 첫 표시 시간·잔상·적색 유지 여부는 실제 패널에서 기록한다.</p><p class="source"><a href="#src-panel">[W1]</a></p></div></div>
+<h3>화면 구성 원칙</h3><p>검은색 지도·벽, 흰색 위치점과 검은 외곽선, 빨간 위험구역 경계·표지를 유지한다. 점을 지울 때는 무조건 흰색으로 지우지 않고 <b>이전 위치 영역의 원래 지도 배경을 복원</b>한다. 변경된 바이트에서 부분 갱신 창을 계산한다. 창에 빨간 화소가 포함되면 전체 갱신한다.</p><p>빨간 화소를 자주 바꾸지 않도록 위험구역은 경계·표지로 표시하고 위치점의 갱신 영역과 겹치지 않게 한다. 다만 <b>부분 갱신에서 빨간 화소가 안정적으로 유지되는지는 실제 패널에서 확인</b>해야 한다. ‘항상 표시’는 정상 표시 화면마다 위험구역이 포함된다는 의미이며 전체 갱신 도중의 깜빡임까지 없다는 보장은 아니다.</p>
+<h3>메모리와 화면 대기</h3><p>800×480 한 평면은 48,000바이트다. ESP32에 흑백·빨강·부분 갱신 기준 버퍼를 각각 하나씩, 합계 144,000바이트를 할당한다. 부분창 전송 임시 버퍼는 변경 영역 크기만큼 추가된다. STM32는 위치·상태 프레임만 전송한다.</p>
+<p>BUSY가 30초 동안 해제되지 않으면 갱신을 중지하고 ERROR를 보낸 뒤 전체 갱신으로 재시도한다. 화면이 구동되는 동안 UART 수신 태스크는 최신 위치와 상태를 별도로 보관한다.</p>
+<div class="notice warn"><strong>화면에는 마지막으로 완료된 갱신 결과가 보인다.</strong><p>변경 창이 누계 다섯 회를 넘게 되면 전체 갱신한다. 위치·상태 프레임 각각 약 2.5초 동안 새 수신이 없으면 미확인으로 전환한다. 마지막 유효 위치가 있으면 수신 경과시간의 하한을 10초 단위로 표시한다. 화면 자체의 갱신 시간만큼 표시가 늦어질 수 있다.</p></div>
+</section>
+
+<section id="verification"><div class="sectionhead"><div><span class="secno">10 / BUILD & VERIFY</span><h2>완성 순서와 통과 기준</h2></div><span class="badge proposal">단품 검증 → 통합</span></div><div class="notice"><strong>소프트웨어에서 확인한 결과</strong><p>STM32는 IAR <code>EMB_FLASH</code> 빌드와 벡터 주소 0x08003000을 확인했다. ESP32는 Arduino-ESP32 2.0.17로 빌드했다. PC에서 STM32가 생성한 정상 프레임 7개를 실제 ESP32 파서로 읽고, 화면 코드로 이전 점 복원·빨강 보존·BUSY 타임아웃 복구를 검증했다. 아래 절차는 실제 보드와 모형에서 진행한다.</p></div>
+<div class="cols3 phases"><div class="card"><div class="phase-tag">GATE 0 / 실제 부품 식별</div><h3>모델·전원·배선 확인</h3><p>사진으로 확인한 ESP32-L·DESPI-C02 표기와 실물을 대조한다. 패널 모델 라벨, 키트 3.3V/5V 출력 단자·전류, 케이블 방향 확인. 확정된 핀 표로 라벨링한다.</p><b>통과 기준:</b> 전압·접지·핀 대응을 설명하고 측정 기록을 남길 수 있음.</div>
+<div class="card"><div class="phase-tag">GATE 1 / 디스플레이</div><h3>기존 예제 → 지도 → 점</h3><p>제공 예제 구동, 지도와 빨간 표지 표시, 점 이동·지우기, 부분 갱신 횟수 및 전체 갱신 검증.</p><b>통과 기준:</b> 색상·잔상·갱신 시간을 실물로 확인. 위치 표시가 실제 시간보다 얼마나 늦는지 기록.</div>
+<div class="card"><div class="phase-tag">GATE 2 / 초음파</div><h3>한 통로 → 4구간 + S5</h3><p>PC에서 RAW로 평평한 표적과 빈 통로의 거리값을 수집하고, 벽 반사·코너 누락·다중 간섭을 확인한다.</p><b>통과 기준:</b> 구간별 오차와 미검출 구간을 기록하고, 모형 크기·배치를 결정.</div>
+<div class="card"><div class="phase-tag">GATE 3 / 독립 제어</div><h3>관제 LED와 자동 부저</h3><p>4개 명령의 LED 패턴, S5 접근·이탈, 잘못된 UART 입력, Echo timeout을 시험한다.</p><b>통과 기준:</b> LED 명령과 부저 조건이 서로를 잘못 덮어쓰지 않음.</div>
+<div class="card"><div class="phase-tag">GATE 4 / 문 개방</div><h3>키패드 0 → PWM → 문</h3><p>서보 무부하 시험, 기존 키트 5V 유지 상태 확인, 문 링크 조정, ARRIVED·새 숫자 0 입력·리셋 시 닫힘 목표 확인.</p><b>통과 기준:</b> 0을 한 번 눌렀을 때 한 번 열리고, 기구 걸림과 MCU 리셋이 없음.</div>
+<div class="card"><div class="phase-tag">GATE 5 / 통합 시연</div><h3>화면 갱신 중에도 동작</h3><p>전체 갱신 중 관제 명령·S5 접근·키패드 입력을 넣어 본다. ESP32 재시작·선 분리도 시험한다.</p><b>통과 기준:</b> STM32 측정·LED·경보가 화면 대기에 막히지 않음. 모든 오류·지연을 구분해 설명 가능.</div></div>
+<h3>배선 전 체크리스트</h3><div class="checks"><label><input type="checkbox"><span>전원을 끈 상태에서 결선했고, 3.3V 레일·5V 레일·GND 라벨을 구분했다.</span></label><label><input type="checkbox"><span>HC-SR04P에 3.3V를 공급한 상태에서 ECHO 최대 전압과 파형을 확인했다.</span></label><label><input type="checkbox"><span>5개 센서를 하나씩 구동했고, TRIG/ECHO를 센서 번호와 동일하게 라벨링했다.</span></label><label><input type="checkbox"><span>PA9/PA10 키트 UART 배선과 PB10/PB11 ESP32 통신선을 혼동하지 않았다.</span></label><label><input type="checkbox"><span>USART·타이머 remap을 임의로 적용하지 않았고, LED 전체 포트 쓰기 코드를 제거했다.</span></label><label><input type="checkbox"><span>서보 전원 공급 능력을 확인했고, SG90 전원 전류가 GPIO로 흐르지 않는다.</span></label><label><input type="checkbox"><span>ESP32와 STM32의 GND는 연결했지만 서로 다른 전원 출력의 3.3V·5V를 무작정 병렬 연결하지 않았다.</span></label><label><input type="checkbox"><span>BUSY/센서 timeout, 위치 미확인 표시, 화면 전체 갱신 중 제어 지속을 시험했다.</span></label></div><p class="small">체크는 이 HTML의 검토용이며 실제 검증 결과를 자동 저장하거나 인증하지 않는다.</p>
+<details><summary>현재 소스 구조와 IAR 프로젝트</summary><pre><code>stm32/
+  Getting_start.eww   IAR에서 EMB_FLASH 구성 열기
+  hardware.c          타이머·GPIO·Echo·키패드·서보·PIEZO
+  serial.c            USART1/USART3 송수신 큐와 줄 단위 입력
+  main.c              순차 측정·배경 보정·좌표·관제 명령·경보·문 상태
+  site_profile.h      실측할 거리·방향·임계값·서보 끝점
+esp32/
+  build.ps1           공식 드라이버 준비·빌드
+  ControlRoom/ControlRoom.ino    UART 수신 태스크 및 최신 화면 처리
+  ControlRoom/protocol.cpp       위치·상태 프레임 검사
+  ControlRoom/panel.cpp          지도·부분/전체 갱신·BUSY 타임아웃
+
+
+
+</code></pre><p>STM32는 수업의 ST STM32F10x Firmware Library V1.0과 C를 사용한다. 키트 DFU 배치에 맞춰 벡터 시작 주소를 <code>0x08003000</code>에 둔다. IAR에서 빌드한 HEX를 수업용 DFU File Manager에서 변환하고 DfuSe Demo로 전송한다.</p><p class="source"><a href="https://github.com/tokengeoji/mcu" target="_blank" rel="noopener noreferrer">GitHub · tokengeoji/mcu</a> · <a href="#src-system">[L4]</a></p></details>
+</section>
+
+<section id="pending"><div class="sectionhead"><div><span class="secno">11 / DECISIONS STILL OPEN</span><h2>확정된 것과 아직 정하지 않은 것</h2></div></div>
+<div class="tablewrap"><table><thead><tr><th>확정</th><th>아직 확인·결정 필요</th></tr></thead><tbody>
+<tr><td>STM32F103RBT6 실습 키트, ESP32-L, DESPI-C02</td><td>패널 GDEY075Z08 모델명, FPC 방향, 실물 전압·전류</td></tr>
+<tr><td>복도 4개, 복도 초음파 4개 + 위험 센서 1개</td><td>복도 길이·폭·배경 거리, 센서 높이·방향, 코너 중복/미검출 구간</td></tr>
+<tr><td>흰색 위치점·검은 지도·빨간 위험 경계/표지</td><td>부분 갱신 잔상·빨간색 유지, 허용되는 화면 지연과 전체 갱신 운용</td></tr>
+<tr><td>SAFE/CAUTION/DANGER/ARRIVED, LED 500ms 점멸, S5 독립 경보</td><td>S5 접근·해제 거리와 유효 측정 연속 횟수</td></tr>
+<tr><td>ARRIVED 후 키패드 숫자 0으로 한 번 개방, 리셋 때 닫힘 목표</td><td>서보 무부하 허용 펄스 폭·기구 연결·부하 전류</td></tr>
+<tr><td>점퍼 케이블 보유, 브레드보드 1개, 별도 어댑터 구매 제외</td><td>기존 키트의 전원 출력 위치와 여유 전류. 부족할 때의 전원 보완 방법</td></tr>
+</tbody></table></div>
+<div class="notice"><strong>실물 검증에 남은 항목</strong><p>사진과 제조사 회로도로 기판·어댑터와 핀을 확인했다. ECHO 전압, 실제 거리 오차, 경보 반응 시간, 모터 전원과 문 이동, 패널 모델·색상·갱신 시간은 실측이 필요하다. <code>site_profile.h</code>의 초기값은 0이다. 거리와 서보 끝점을 보정할 때까지 위치는 미확인, 경보는 UNKNOWN, 문은 UNSET으로 표시한다.</p></div>
+</section>
+
+<section id="sources"><div class="sectionhead"><div><span class="secno">12 / EVIDENCE</span><h2>근거 자료와 소스</h2></div></div>
+<p>운영 시나리오는 실습 요구사항을, 하드웨어 동작은 수업 예제와 제조사 문서를 따랐다. 아래 자료와 저장소에서 구현된 핀·타이머·프로토콜을 확인할 수 있다. <a href="https://github.com/tokengeoji/mcu" target="_blank" rel="noopener noreferrer">GitHub · tokengeoji/mcu</a></p>
+<ol class="refs">
+<li id="src-local"><b>[L1] 사용자 확정 요구사항.</b> 현재 대화와 「01_2조_프로젝트_주제신청서_역할추가.docx」. 물체 1개, 복도 4개, 위험 센서 1개, 관제 LED 4상태, 독립 부저, 숫자 0 문 개방, 인원 계수 후순위.</li>
+<li id="src-lesson"><b>[L2] 업로드한 실습자료.</b> 「01_GPIO_Output.pptx」 MCU·사용 가능 GPIO·IAR/DFU 설명; 「실험2-Keypad.pdf」10쪽 PC0~PC6 결선; 「실험5-UART-with 과제.pdf」13~17·25쪽 PC UART 연결과 인터럽트; 「03_TIMER.pdf」19~20·22~25·27~29쪽 PWM·PIEZO·핀 기능. 자료는 프로젝트에 제공된 원본을 기준으로 확인했다.</li>
+<li id="src-code"><b>[L3] Good Display · ESP32epdx.</b> 대상 패널의 공식 GDEY075Z08 예제, SPI와 GUI 소스를 커밋 <code>d5ed3b777bedb9b407ccff09dc810a9248eb7926</code>에 고정했다. <a href="https://github.com/gooddisplayshare/ESP32epdx/tree/d5ed3b777bedb9b407ccff09dc810a9248eb7926/examples/3-Colors%20%28BWR%29/7.5/GDEY075Z08" target="_blank" rel="noopener noreferrer">제조사 예제</a></li>
+<li id="src-system"><b>[L4] 업로드한 4.INTERRUPT.zip.</b> 내부 <code>2.Int_timer/System_func.c</code>, <code>config/STM32F10x_FLASH.icf</code> 및 TIM 라이브러리. 72MHz 설정, APB 분주, 벡터 시작 주소와 메모리 배치 확인.</li>
+<li id="src-panel"><b>[W1] Good Display · GDEY075Z08.</b> 해상도·색상·부분/전체 갱신 사양. <a href="https://www.good-display.com/product/394.html" target="_blank" rel="noopener noreferrer">공식 제품 페이지</a></li>
+<li id="src-despi"><b>[W2] Good Display · DESPI-C02.</b> 3.3V 전원과 SPI·제어 핀 정의. <a href="https://www.good-display.com/product/516.html" target="_blank" rel="noopener noreferrer">공식 어댑터 페이지</a></li>
+<li id="src-st"><b>[W3] STMicroelectronics · STM32F103x8/xB DS5319 Rev 20.</b> 12쪽 clock tree, 28~33쪽 Table 5. 핀 기능·FT 표시·타이머 클럭을 확인. <a href="https://www.st.com/resource/en/datasheet/stm32f103rb.pdf" target="_blank" rel="noopener noreferrer">공식 데이터시트 PDF</a></li>
+<li id="src-esp"><b>[W4] Espressif · Arduino-ESP32 UART/SPI 공식 문서.</b> 보드별 UART 수와 RX/TX 지정, SPI 핀 지정 API. <a href="https://docs.espressif.com/projects/arduino-esp32/en/latest/api/serial.html" target="_blank" rel="noopener noreferrer">UART</a> · <a href="https://docs.espressif.com/projects/arduino-esp32/en/latest/api/spi.html" target="_blank" rel="noopener noreferrer">SPI</a>. Arduino API를 쓴다는 것은 Arduino 보드를 추가한다는 뜻이 아니다.</li>
+<li id="src-sensor"><b>[W5] 디바이스마트 · HC-SR04P [SZH-USBC-004].</b> 선정한 판매품은 3~5V 동작과 최소 측정거리 2cm로 안내된다. 상세 데이터시트와 Echo 출력의 보장값은 별도 확인 필요. <a href="https://www.devicemart.co.kr/goods/view?no=1323062" target="_blank" rel="noopener noreferrer">선정 제품 페이지</a></li>
+<li id="src-board"><b>[W6] Good Display · ESP32-L 회로도.</b> 공식 회로의 P5·P6와 지급 보드 사진의 실크를 대조했다. <a href="https://www.good-display.com/companyfile/909.html" target="_blank" rel="noopener noreferrer">제조사 회로도</a></li>
+<li id="src-multi"><b>[W7] MaxBotix · 다중 초음파센서 사용.</b> 상호 간섭과 순차 구동 원리 참고. 본 계획의 HC-SR04P 주기·핀 사양으로 사용한 자료는 아니다. <a href="https://maxbotix.com/blogs/blog/using-multiple-ultrasonic-sensors" target="_blank" rel="noopener noreferrer">제조사 설명</a></li>
+<li id="src-rese"><b>[W8] Good Display · DESPI-C02 RESE 설정표 §4.3.</b> GDEY075Z08의 0.47Ω 설정. <a href="https://v4.cecdn.yun300.cn/100001_1909185148/Evaluation%20Kit%20for%20E-Paper%20Display%20DEArduino-L%28C02%29.pdf" target="_blank" rel="noopener noreferrer">제조사 선택표 PDF</a></li>
+</ol><p class="small">본문과 미리보기는 네트워크 없이 열린다. 저장소와 외부 자료 링크를 열 때 인터넷 연결이 필요하다. 파일 인코딩은 UTF-8이다.</p></section>
+<div class="footer">2조 · 위험구역 작업자 추적 관제실 / 펌웨어 구현 반영 배선계획</div>
+</main>
+<script>
+(()=>{
+'use strict';
+const pinRows=Array.from(document.querySelectorAll('#pinTable tbody tr'));
+const pinSearch=document.getElementById('pinSearch');
+pinSearch.addEventListener('input',()=>{const q=pinSearch.value.trim().toLowerCase();let n=0;pinRows.forEach(r=>{const show=r.textContent.toLowerCase().includes(q);r.hidden=!show;if(show)n++;});document.getElementById('pinCount').textContent=n+'개 신호';});
+document.getElementById('copyPins').addEventListener('click',async()=>{const rows=Array.from(document.querySelectorAll('#pinTable tr')).map(r=>Array.from(r.children).map(c=>c.innerText).join('\t')).join('\n');try{await navigator.clipboard.writeText(rows);document.getElementById('copyPins').textContent='복사 완료';setTimeout(()=>document.getElementById('copyPins').textContent='배선표 복사',1500);}catch(e){const blob=new Blob(['\ufeff'+rows],{type:'text/tab-separated-values;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='group2_pin_plan.tsv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}});
+const names={safe:'양호',caution:'경계',danger:'위험',arrived:'도착'};
+const modes={safe:['on',''],caution:['blink',''],danger:['blink','blink'],arrived:['on','on']};
+document.querySelectorAll('.cmd').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.cmd').forEach(x=>x.classList.remove('active'));b.classList.add('active');const s=b.dataset.state;document.getElementById('ledA').className='led '+modes[s][0];document.getElementById('ledB').className='led '+modes[s][1];document.getElementById('ledText').textContent=names[s];}));
+const legs=[{x1:110,y1:110,x2:650,y2:110,n:1},{x1:650,y1:110,x2:650,y2:250,n:2},{x1:650,y1:250,x2:270,y2:250,n:3},{x1:270,y1:250,x2:270,y2:375,n:4}];
+legs.forEach(l=>l.len=Math.hypot(l.x2-l.x1,l.y2-l.y1));const totalLen=legs.reduce((s,l)=>s+l.len,0);
+function positionUpdate(){let d=Number(document.getElementById('position').value)/1000*totalLen;for(let i=0;i<legs.length;i++){const l=legs[i];if(d<=l.len||i===legs.length-1){const f=Math.min(1,d/l.len);document.getElementById('workerDot').setAttribute('cx',String(l.x1+(l.x2-l.x1)*f));document.getElementById('workerDot').setAttribute('cy',String(l.y1+(l.y2-l.y1)*f));document.getElementById('positionText').textContent='복도 '+l.n;break;}d-=l.len;}}
+document.getElementById('position').addEventListener('input',positionUpdate);
+document.getElementById('hazard').addEventListener('change',e=>{document.getElementById('alarmBox').classList.toggle('alarming',e.target.checked);document.getElementById('alarmText').innerHTML=e.target.checked?'<b>부저 ON</b> · S5 접근 감지':'<b>부저 OFF</b> · 매우 위험 지점 이탈';});
+let doorOpen=false;document.getElementById('doorButton').addEventListener('click',()=>{
+  const active=document.querySelector('.cmd.active');
+  const text=document.getElementById('doorText');
+  if(doorOpen){text.textContent='이미 열림. 숫자 0을 다시 눌러도 열린 상태를 유지한다. 페이지를 새로 열면 시연을 초기화한다.';return;}
+  if(!active || active.dataset.state!=='arrived'){text.textContent='닫힘. 관제자가 도착 명령을 보내야 열 수 있다.';return;}
+  doorOpen=true;const line=document.getElementById('doorDrawing');line.setAttribute('x2','238');line.setAttribute('y2','335');
+  text.textContent='열림. 다음 시연은 페이지를 새로 열어 시작한다.';});
+const beforePrint=()=>document.querySelectorAll('details').forEach(d=>{d.dataset.wasOpen=d.open?'1':'0';d.open=true;});
+const afterPrint=()=>document.querySelectorAll('details').forEach(d=>{if(d.dataset.wasOpen==='0')d.open=false;});
+window.addEventListener('beforeprint',beforePrint);window.addEventListener('afterprint',afterPrint);
+})();
+</script>
+</body></html>

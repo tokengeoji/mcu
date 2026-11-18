@@ -235,7 +235,10 @@ int echo_result(u32 elapsed_ms, int *distance)
         elapsed_ms < ECHO_TIMEOUT_MS) return 0;
     TIM_ITConfig(capture_timer, capture_it, DISABLE);
     *distance = -1;
-    if (capture_state == COMPLETE && pulse > 0 && pulse < ECHO_TIMEOUT_MS * 1000U) {
+    /* At the slot deadline even a short, late pulse (or wrapped CCR) is invalid.
+       The channel IRQ is masked above; the next slot clears CCxIF/CCxOF. */
+    if (elapsed_ms < ECHO_TIMEOUT_MS && capture_state == COMPLETE &&
+        pulse > 0 && pulse < ECHO_TIMEOUT_MS * 1000U) {
         *distance = (int)(((u32)pulse * 343 + 1000) / 2000);
         if (*distance == 0) *distance = -1;
     }
