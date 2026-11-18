@@ -1,9 +1,28 @@
-/* Pin allocation: supplied wiring plan, sections 05 and 07.
+/* Pin allocation: supplied wiring plan, sections 04 and 07.
    Timer/USART bindings use the supplied ST firmware library V1.0. */
 #include "station.h"
 #include "site_profile.h"
 
 volatile u32 station_ms;
+
+/* TRIG pins are on GPIOC. ECHO inputs use the default timer pin mapping
+   in the STM32F103x8/xB datasheet. Row order also defines the five RAW columns. */
+typedef struct {
+    u16 trigger_pin;
+    GPIO_TypeDef *echo_port;
+    u16 echo_pin;
+    TIM_TypeDef *timer;
+    u8 channel;
+} SensorPins;
+
+static const SensorPins sensor_pins[SENSOR_COUNT] = {
+    {GPIO_Pin_8,  GPIOA, GPIO_Pin_0, TIM2, TIM_Channel_1}, /* S1 */
+    {GPIO_Pin_9,  GPIOA, GPIO_Pin_1, TIM2, TIM_Channel_2}, /* S2 */
+    {GPIO_Pin_10, GPIOA, GPIO_Pin_2, TIM2, TIM_Channel_3}, /* S3 */
+    {GPIO_Pin_11, GPIOA, GPIO_Pin_3, TIM2, TIM_Channel_4}, /* S4 */
+    {GPIO_Pin_12, GPIOB, GPIO_Pin_6, TIM4, TIM_Channel_1}  /* S5 */
+};
+
 static TIM_TypeDef *capture_timer;
 static u8 channel;
 static u16 capture_it, overcapture_flag;
@@ -79,6 +98,7 @@ void station_hardware_init(void)
     RCC_ClocksTypeDef clock;
     TIM_OCInitTypeDef oc;
     u32 apb1_timer, apb2_timer;
+    u8 i;
     RCC_GetClocksFreq(&clock);
     apb1_timer = clock.PCLK1_Frequency;
     if (apb1_timer != clock.HCLK_Frequency) apb1_timer *= 2;
@@ -88,8 +108,11 @@ void station_hardware_init(void)
         RCC_APB2Periph_GPIOC | RCC_APB2Periph_TIM1 | RCC_APB2Periph_USART1, ENABLE);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2 | RCC_APB1Periph_TIM3 |
         RCC_APB1Periph_TIM4 | RCC_APB1Periph_USART3, ENABLE);
-    gpio_mode(GPIOA, GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3, GPIO_Mode_IPD);
-    gpio_mode(GPIOB, GPIO_Pin_6, GPIO_Mode_IPD);
+    for (i = 0; i < SENSOR_COUNT; ++i) {
+        GPIO_ResetBits(GPIOC, sensor_pins[i].trigger_pin);
+        gpio_mode(GPIOC, sensor_pins[i].trigger_pin, GPIO_Mode_Out_PP);
+        gpio_mode(sensor_pins[i].echo_port, sensor_pins[i].echo_pin, GPIO_Mode_IPD);
+    }
     gpio_mode(GPIOA, GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_8, GPIO_Mode_Out_PP);
     gpio_mode(GPIOA, GPIO_Pin_6 | GPIO_Pin_9, GPIO_Mode_AF_PP);
     gpio_mode(GPIOB, GPIO_Pin_10, GPIO_Mode_AF_PP);
@@ -101,7 +124,6 @@ void station_hardware_init(void)
     gpio_mode(GPIOC, GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6, GPIO_Mode_Out_OD);
     GPIO_SetBits(GPIOC, GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6);
     gpio_mode(GPIOC, GPIO_Pin_3, GPIO_Mode_Out_PP);
-    gpio_mode(GPIOC, GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_12, GPIO_Mode_Out_PP);
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
     timer_base(TIM2, (u16)(apb1_timer/1000000 - 1), 65535);
     timer_base(TIM4, (u16)(apb1_timer/1000000 - 1), 65535);
@@ -177,26 +199,23 @@ static void set_capture_edge(u16 polarity)
 
 void echo_start(u8 sensor)
 {
-    u16 trigger = (u16)(GPIO_Pin_8 << sensor);
-    u16 echo_pin, start;
-    GPIO_TypeDef *echo_port;
+    const SensorPins *pins = &sensor_pins[sensor];
+    u16 start;
     unsigned budget = 1024;
-    capture_timer = sensor == 4 ? TIM4 : TIM2;
-    channel = sensor == 4 ? 0 : sensor;
+    capture_timer = pins->timer;
+    channel = pins->channel;
     capture_it = (u16)(TIM_IT_CC1 << channel);
     overcapture_flag = (u16)(TIM_FLAG_CC1OF << channel);
-    echo_port = sensor == 4 ? GPIOB : GPIOA;
-    echo_pin = sensor == 4 ? GPIO_Pin_6 : (u16)(GPIO_Pin_0 << channel);
-    if (GPIO_ReadInputDataBit(echo_port, echo_pin)) { capture_state = BAD_ECHO; return; }
+    if (GPIO_ReadInputDataBit(pins->echo_port, pins->echo_pin)) { capture_state = BAD_ECHO; return; }
     set_capture_edge(TIM_ICPolarity_Rising);
     TIM_ClearFlag(capture_timer, capture_it | overcapture_flag);
     capture_state = RISING;
     TIM_ITConfig(capture_timer, capture_it, ENABLE);
-    GPIO_SetBits(GPIOC, trigger);
+    GPIO_SetBits(GPIOC, pins->trigger_pin);
     start = TIM_GetCounter(TIM2);
     /* Only the requested 10 us trigger uses a bounded foreground wait. */
     while ((u16)(TIM_GetCounter(TIM2) - start) < 10 && budget) --budget;
-    GPIO_ResetBits(GPIOC, trigger);
+    GPIO_ResetBits(GPIOC, pins->trigger_pin);
     if (!budget) {
         TIM_ITConfig(capture_timer, capture_it, DISABLE);
         capture_state = BAD_ECHO;

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 894" width="1440" height="894" role="img" aria-labelledby="placementTitle placementDesc" font-family="Malgun Gothic, Apple SD Gothic Neo, Noto Sans KR, sans-serif">
+<title id="placementTitle">모형 복도와 장비 배치</title>
+<desc id="placementDesc">네 복도가 오른쪽, 아래, 왼쪽, 아래로 이어진다. S1부터 S4 순서로 복도를 감시하며 S4는 목적지 쪽에서 위를 본다. S5는 별도 위험 구역에 접근하는 물체를 감지한다. 모든 설치 위치와 감지 방향은 보정 전 예시다.</desc>
+<defs><marker id="pMove" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 L2.4 5 Z" fill="#182D36"/></marker><marker id="pSense" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 L2.4 5 Z" fill="#006E67"/></marker><marker id="pHaz" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 L2.4 5 Z" fill="#A33929"/></marker></defs>
+<rect x="0" y="0" width="1440" height="894" rx="0" fill="#F5F8F7" stroke="none" stroke-width="1.5"/>
+<text x="48" y="63" fill="#182D36" font-size="41" font-weight="700" text-anchor="start">모형 복도와 장비 배치</text>
+<text x="50" y="104" fill="#425866" font-size="21" font-weight="400" text-anchor="start">위에서 본 설치 예시 · 센서의 위치와 방향은 모형에서 실측·보정 후 확정</text>
+<rect x="48" y="142" width="924" height="606" rx="12" fill="#FFFFFF" stroke="#BFCFD3" stroke-width="1.5"/>
+<text x="76" y="188" fill="#182D36" font-size="24" font-weight="700" text-anchor="start">현장 모형</text>
+<path d="M627 178 H667" fill="none" stroke="#006E67" stroke-width="3" marker-end="url(#pSense)"/>
+<text x="680" y="184" fill="#425866" font-size="16" font-weight="400" text-anchor="start">센서 감지 방향</text>
+<path d="M830 178 H860" fill="none" stroke="#182D36" stroke-width="2" marker-end="url(#pMove)"/>
+<text x="872" y="184" fill="#425866" font-size="16" font-weight="400" text-anchor="start">이동</text>
+<path d="M150 276 H754 V459 H344 V634" fill="none" stroke="#BAC8CE" stroke-width="78" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M150 276 H754 V459 H344 V634" fill="none" stroke="#EAF0F1" stroke-width="72" stroke-linejoin="round" stroke-linecap="round"/>
+<rect x="447" y="401" width="177" height="118" rx="8" fill="none" stroke="#BB503A" stroke-width="2.5" stroke-dasharray="8 6"/>
+<text x="454" y="391" fill="#A33929" font-size="17" font-weight="700" text-anchor="start">S5 위험 구역</text>
+<path d="M380 276 H483" fill="none" stroke="#182D36" stroke-width="3" marker-end="url(#pMove)"/>
+<path d="M754 355 V396" fill="none" stroke="#182D36" stroke-width="3" marker-end="url(#pMove)"/>
+<path d="M697 459 H633" fill="none" stroke="#182D36" stroke-width="3" marker-end="url(#pMove)"/>
+<path d="M344 531 V575" fill="none" stroke="#182D36" stroke-width="3" marker-end="url(#pMove)"/>
+<text x="332" y="263" fill="#182D36" font-size="18" font-weight="700" text-anchor="start">복도 1</text>
+<text x="798" y="369" fill="#182D36" font-size="18" font-weight="700" text-anchor="start">복도 2</text>
+<text x="389" y="461" fill="#182D36" font-size="18" font-weight="700" text-anchor="start">복도 3</text>
+<text x="238" y="553" fill="#182D36" font-size="18" font-weight="700" text-anchor="start">복도 4</text>
+<rect x="83" y="259" width="56" height="34" rx="7" fill="#006E67" stroke="none" stroke-width="1.5"/>
+<text x="111" y="283" fill="#FFFFFF" font-size="18" font-weight="700" text-anchor="middle">S1</text>
+<path d="M146 276 H221" fill="none" stroke="#006E67" stroke-width="3" marker-end="url(#pSense)"/>
+<text x="133" y="342" fill="#182D36" font-size="18" font-weight="700" text-anchor="start">출발</text>
+<rect x="726" y="202" width="56" height="34" rx="7" fill="#006E67" stroke="none" stroke-width="1.5"/>
+<text x="754" y="226" fill="#FFFFFF" font-size="18" font-weight="700" text-anchor="middle">S2</text>
+<path d="M754 241 V302" fill="none" stroke="#006E67" stroke-width="3" marker-end="url(#pSense)"/>
+<rect x="820" y="442" width="56" height="34" rx="7" fill="#006E67" stroke="none" stroke-width="1.5"/>
+<text x="848" y="466" fill="#FFFFFF" font-size="18" font-weight="700" text-anchor="middle">S3</text>
+<path d="M813 459 H731" fill="none" stroke="#006E67" stroke-width="3" marker-end="url(#pSense)"/>
+<rect x="316" y="667" width="56" height="34" rx="7" fill="#006E67" stroke="none" stroke-width="1.5"/>
+<text x="344" y="691" fill="#FFFFFF" font-size="18" font-weight="700" text-anchor="middle">S4</text>
+<path d="M344 660 V600" fill="none" stroke="#006E67" stroke-width="3" marker-end="url(#pSense)"/>
+<rect x="520" y="551" width="56" height="34" rx="7" fill="#A33929" stroke="none" stroke-width="1.5"/>
+<text x="548" y="575" fill="#FFFFFF" font-size="18" font-weight="700" text-anchor="middle">S5</text>
+<path d="M548 545 V484" fill="none" stroke="#A33929" stroke-width="3" marker-end="url(#pHaz)"/>
+<text x="590" y="570" fill="#A33929" font-size="17" font-weight="400" text-anchor="start">접근 감지</text>
+<path d="M366 632 H420 V666" fill="none" stroke="#526976" stroke-width="1.7" />
+<circle cx="366" cy="632" r="4" fill="#526976"/>
+<rect x="432" y="638" width="427" height="65" rx="7" fill="#F3F5F5" stroke="none" stroke-width="1.5"/>
+<text x="452" y="666" fill="#182D36" font-size="19" font-weight="700" text-anchor="start">목적지 · 모형 문 / SG90</text>
+<text x="452" y="692" fill="#425866" font-size="17" font-weight="400" text-anchor="start">도착 명령 뒤 키패드 0을 눌러 개방</text>
+<rect x="994" y="142" width="398" height="606" rx="12" fill="#FFFFFF" stroke="#BFCFD3" stroke-width="1.5"/>
+<text x="1020" y="188" fill="#182D36" font-size="24" font-weight="700" text-anchor="start">장비를 두는 곳</text>
+<path d="M1020 210 H1365" fill="none" stroke="#BFCFD3" stroke-width="1" />
+<rect x="1020" y="240" width="7" height="99" rx="3" fill="#006E67" stroke="none" stroke-width="1.5"/>
+<text x="1045" y="261" fill="#182D36" font-size="22" font-weight="700" text-anchor="start">관제소 책상</text>
+<text x="1045" y="299" fill="#182D36" font-size="18" font-weight="400" text-anchor="start">PC · ESP32-L · DESPI-C02</text>
+<text x="1045" y="329" fill="#425866" font-size="17" font-weight="400" text-anchor="start">전자종이 지도에서 위치 확인</text>
+<rect x="1020" y="370" width="7" height="110" rx="3" fill="#182D36" stroke="none" stroke-width="1.5"/>
+<text x="1045" y="391" fill="#182D36" font-size="22" font-weight="700" text-anchor="start">현장 키트</text>
+<text x="1045" y="430" fill="#182D36" font-size="18" font-weight="400" text-anchor="start">STM32 · LED 2개 · PIEZO</text>
+<text x="1045" y="460" fill="#425866" font-size="17" font-weight="400" text-anchor="start">센서 배선과 공통 GND 연결</text>
+<rect x="1020" y="510" width="7" height="116" rx="3" fill="#A33929" stroke="none" stroke-width="1.5"/>
+<text x="1045" y="531" fill="#182D36" font-size="22" font-weight="700" text-anchor="start">목적지 조작부</text>
+<text x="1045" y="570" fill="#182D36" font-size="18" font-weight="400" text-anchor="start">4 × 3 키패드 · 모형 문 · SG90</text>
+<text x="1045" y="600" fill="#425866" font-size="17" font-weight="400" text-anchor="start">키트 키패드는 케이블로 연결</text>
+<path d="M1020 652 H1365" fill="none" stroke="#BFCFD3" stroke-width="1" />
+<text x="1020" y="695" fill="#425866" font-size="17" font-weight="400" text-anchor="start">복도 점검은 한 센서씩 표적을 움직여</text>
+<text x="1020" y="720" fill="#425866" font-size="17" font-weight="400" text-anchor="start">RAW의 해당 열이 변하는지 확인한다.</text>
+<rect x="48" y="771" width="1344" height="88" rx="11" fill="#EAF0F1" stroke="none" stroke-width="1.5"/>
+<text x="72" y="808" fill="#182D36" font-size="20" font-weight="700" text-anchor="start">실측 항목</text>
+<text x="226" y="808" fill="#182D36" font-size="19" font-weight="400" text-anchor="start">각 센서의 설치점·높이·방향, 복도 길이, 빈 복도의 배경 거리, 코너의 중복·미검출 구간</text>
+<text x="226" y="839" fill="#425866" font-size="17" font-weight="400" text-anchor="start">S5의 접근·해제 거리와 서보의 끝점을 보정한다. 도면은 축척이나 전원 배선 길이를 지정하지 않는다.</text>
+</svg>
