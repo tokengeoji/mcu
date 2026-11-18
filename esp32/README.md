@@ -19,6 +19,32 @@ UART는 3.3 V TTL, 115200 bps, 8N1이다. 기판 P5와 DESPI-C02 P2는 핀 1부�
 
 ESP32-L 위쪽 USB-C와 PC의 USB 포트를 **데이터 케이블**로 연결하고 보드 스위치를 **ON**에 둔다. 이 케이블이 보드 전원(5 V)과 업로드를 함께 담당한다. STM32와 연결할 전원 기준선은 공통 GND 한 가닥이며 P6의 3V3는 비워 둔다. [Good Display 기판 사양](https://www.good-display.com/product/338.html)
 
+### Arduino IDE에서 업로드하기
+
+1. 현재 실습 PC의 **Arduino IDE 2.3.11**에서 **File → Open**을 누르고 `C:\mcu\project\esp32\ArduinoIDE\ControlRoom\ControlRoom.ino`를 연다. 이 폴더에는 GDEY075Z08 드라이버와 Good Display 공식 라이브러리가 함께 들어 있다. 새 PC는 아래 준비 절차를 먼저 진행한다.
+2. **Tools → Board → esp32 → ESP32 Dev Module**을 선택한다. **Tools → Port**에서는 ESP32-L을 USB로 연결할 때 새로 나타난 포트를 선택한다. 이 PC의 장치 관리자 표기는 **USB-SERIAL CH340 (COM4)**다. 해당 포트를 쓰는 다른 터미널은 닫는다.
+3. 왼쪽 위 **Verify(✓)**를 눌러 컴파일 성공을 확인하고 **Upload(→)**를 누른다. 아래 Output 창에 플래시 검사 결과 `Hash of data verified.`와 재시작 메시지가 나타난다. [Arduino IDE 업로드 안내](https://support.arduino.cc/hc/en-us/articles/4733418441116-Upload-a-sketch-in-Arduino-IDE)
+4. **Tools → Serial Monitor**를 열고 속도를 **115200 baud**로 설정한다. ESP32-L의 빨간 RESET을 한 번 눌러 `EPD: initializing for white clear.`부터 읽는다. STM32의 센서 명령 `RAW`는 키트 UART의 별도 포트에서 9600 baud로 보낸다.
+
+### 다른 Windows PC에서 처음 한 번 준비하기
+
+1. Arduino IDE 2를 설치한다. **File → Preferences → Additional boards manager URLs**에 아래 주소를 추가하고 **OK**를 누른다. [Arduino IDE 다운로드](https://www.arduino.cc/en/software/) · [Espressif 보드 패키지 설치 안내](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html)
+
+   ```text
+   https://espressif.github.io/arduino-esp32/package_esp32_index.json
+   ```
+
+2. IDE 왼쪽의 **Boards Manager**에서 `esp32`를 검색한다. **esp32 by Espressif Systems**의 버전 **2.0.17**을 선택해 **Install**을 누른다.
+3. 프로젝트 전체를 압축 해제하고 `esp32` 폴더에서 PowerShell을 연 뒤 아래 명령을 실행한다. 제조사 파일을 내려받아 IDE 스케치를 만드는 단계이며 별도 Arduino CLI 설치는 필요 없다.
+
+   ```powershell
+   .\build.ps1 -PrepareIde
+   ```
+
+4. 마지막 줄에 나온 `ControlRoom.ino`를 IDE의 **File → Open**으로 연 뒤 위 업로드 순서를 따른다. 소스나 `stm32/site_profile.h`를 수정하고 다시 준비하면 기존 스케치를 보존하고 날짜가 붙은 새 폴더 경로를 출력한다.
+
+### PowerShell에서 빌드·전송할 때 (선택)
+
 **현재 실습 PC**에서 장치 관리자의 `USB-SERIAL CH340 (COM4)`를 통해 esptool이 `ESP32-D0WD-V3`를 식별했다. COM4를 쓰는 터미널을 닫고, PowerShell을 열어 다음 두 줄을 차례로 실행한다.
 
 ```powershell

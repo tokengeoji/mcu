@@ -8,16 +8,16 @@
 
 ## 빌드와 초기 설정
 
-다른 Windows PC에서는 프로젝트 전체를 새 폴더에 내려받아 압축을 푼 뒤 `stm32/Getting_start.eww`를 연다. 저장소의 `.gitattributes`가 STM32의 C·헤더·어셈블리·IAR 설정 파일을 Windows 개행(CRLF)으로 지정한다. 이전 소스 ZIP을 풀어 사용하던 경우 새 폴더에서 시작하고, 보정한 `site_profile.h` 값이 있으면 옮긴다. STM32는 수업용 IAR EWARM, ESP32는 Arduino CLI와 esp32 코어 2.0.17이 필요하다. [IAR 편집기 개행 설정](https://docs.iar.com/ewarm/10.1x/en/ide-project-management-and-building/the-development-environment/reference-information-on-the-ide/editor-options.html) · [Git 개행 설정](https://git-scm.com/docs/gitattributes#_eol)
+다른 Windows PC에서는 프로젝트 전체를 새 폴더에 내려받아 압축을 푼 뒤 `stm32/Getting_start.eww`를 연다. 저장소의 `.gitattributes`가 STM32의 C·헤더·어셈블리·IAR 설정 파일을 Windows 개행(CRLF)으로 지정한다. 이전 소스 ZIP을 풀어 사용하던 경우 새 폴더에서 시작하고, 보정한 `site_profile.h` 값이 있으면 옮긴다. STM32는 수업용 IAR EWARM, ESP32는 Arduino IDE 2와 Espressif의 esp32 보드 패키지 2.0.17을 사용한다. [IAR 편집기 개행 설정](https://docs.iar.com/ewarm/10.1x/en/ide-project-management-and-building/the-development-environment/reference-information-on-the-ide/editor-options.html) · [Git 개행 설정](https://git-scm.com/docs/gitattributes#_eol)
 
 | 대상 | 프로젝트 | 시작 방법 |
 | --- | --- | --- |
 | 한백전자 HBE-MCU-MULTI · STM32F103RBT6 | [IAR 워크스페이스](stm32/Getting_start.eww) | 실습 환경인 IAR Embedded Workbench for Arm에서 `EMB_FLASH`를 선택하고 **Project → Rebuild All**을 실행한다. |
-| Good Display ESP32-L · ESP32-S 모듈 | [전자종이 프로젝트](esp32/) | ESP32 전용 프로젝트에서 제조사 드라이버를 준비한 뒤 클래식 ESP32 대상으로 빌드한다. |
+| Good Display ESP32-L · ESP32-S 모듈 | [전자종이 프로젝트](esp32/) | Arduino IDE에서 준비된 `ControlRoom.ino`를 열고 **ESP32 Dev Module**과 실제 USB 포트를 선택한 뒤 **검증(✓)**과 **업로드(→)**를 차례로 누른다. |
 
 STM32는 실습 예제에 동봉된 **STM32F10x Firmware Library V1.0**을 사용한다. 시작 코드, 클록, 인터럽트 벡터, 링커는 키트의 DFU 부트로더 영역을 보존한다. 새 HEX 파일은 `stm32/EMB_FLASH/Exe/Getting_start.hex`에 생성된다. 수업에서 사용하는 DFU File Manager로 HEX를 DFU로 변환하고, 보드를 PROG 모드에 넣은 뒤 DfuSe Demo에서 애플리케이션을 내려받을 수 있다.
 
-**센서 시험용 STM32 펌웨어**는 이 PC의 `C:\mcu\ControlRoom_STM32_초음파피에조.dfu` 또는 [GitHub 릴리스](https://github.com/tokengeoji/mcu/releases/tag/piezo-check-v1)에서 찾을 수 있다. DfuSe Demo의 **Choose → Upgrade**로 이 DFU를 쓰고, 완료 후 PROG에서 손을 뗀 상태로 RESET을 누른다. ESP32-L은 USB-C 데이터 케이블로 PC에 연결하고 스위치를 ON으로 옮긴다. 이 PC에서 확인한 ESP32 업로드 포트는 CH340(COM4)다. [ESP32 업로드 명령](esp32/README.md#빌드와-전송)
+**센서 시험용 STM32 펌웨어**는 이 PC의 `C:\mcu\ControlRoom_STM32_초음파피에조.dfu` 또는 [GitHub 릴리스](https://github.com/tokengeoji/mcu/releases/tag/piezo-check-v1)에서 찾을 수 있다. DfuSe Demo의 **Choose → Upgrade**로 이 DFU를 쓰고, 완료 후 PROG에서 손을 뗀 상태로 RESET을 누른다. ESP32-L은 USB-C 데이터 케이블로 PC에 연결하고 스위치를 ON으로 옮긴다. 이 PC에서 확인한 ESP32 업로드 포트는 CH340(COM4)다. 이 PC에서는 Arduino IDE 2.3.11에서 **File → Open**으로 `C:\mcu\project\esp32\ArduinoIDE\ControlRoom\ControlRoom.ino`를 연다. 다른 PC는 먼저 제조사 라이브러리가 포함된 스케치를 준비한다. [IDE 설정·스케치 준비·업로드](esp32/README.md#빌드와-전송)
 
 **센서 1개를 먼저 시험한다.** 키트의 PA6을 PIEZO 입력에 잇고 S1 정면 20~40 cm에 평평한 표적을 둔다. 키패드 `1`을 2초간 누르면 새 ECHO마다 짧게 울린다. 같은 방법으로 `2`~`5`를 각각 S2~S5에서 시험한다. ESP32를 연결하기 전에도 시험할 수 있다. 소리가 없으면 키트 UART 포트를 9600 baud로 열고 `RAW`와 Enter를 보내 해당 열을 확인한다. 모형 치수와 경보 거리, 서보 끝점은 실측 후 [보정 설정](stm32/site_profile.h)에 넣는다. 초기 설정으로도 명령·LED·원시 거리 전송을 시험할 수 있다. 보정 전 위치는 미확인, 경보는 `UNKNOWN`, 문은 `UNSET`이며 서보 펄스를 출력하지 않는다.
 

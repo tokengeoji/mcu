@@ -1,7 +1,8 @@
 param(
     [string]$ArduinoCli = 'arduino-cli',
     [string]$ConfigFile,
-    [string]$UploadPort
+    [string]$UploadPort,
+    [switch]$PrepareIde
 )
 $ErrorActionPreference = 'Stop'
 $revision = 'd5ed3b777bedb9b407ccff09dc810a9248eb7926'
@@ -53,6 +54,28 @@ $driver = $driver.Replace('x_end%256-1','x_end%256').Replace('y_end%256-1','y_en
 
 Copy-Item -Force (Join-Path $PSScriptRoot 'ControlRoom/*') $sketch
 Copy-Item -Force -LiteralPath (Join-Path $PSScriptRoot '../stm32/site_profile.h') -Destination $sketch
+if ($PrepareIde) {
+    $ideRoot = Join-Path $PSScriptRoot 'ArduinoIDE'
+    $ideSketch = Join-Path $ideRoot 'ControlRoom'
+    # A sketch already opened and edited in the IDE belongs to its user.
+    if (Test-Path -LiteralPath $ideSketch) {
+        $ideSketch = Join-Path $ideRoot ((Get-Date -Format 'yyyyMMdd-HHmmss-fffffff') + '/ControlRoom')
+    }
+    $null = New-Item -ItemType Directory -Path $ideSketch -Force
+    Copy-Item -Path (Join-Path $sketch '*') -Destination $ideSketch
+    # Arduino IDE recursively compiles libraries bundled in a sketch's src folder.
+    $ideSrc = New-Item -ItemType Directory -Path (Join-Path $ideSketch 'src')
+    Copy-Item -Recurse -LiteralPath (Join-Path $lib 'src') -Destination (Join-Path $ideSrc.FullName 'ESP32epdx')
+    foreach ($entry in @(@('panel.cpp', 'ESP32epdx.h'), @('EPD.cpp', 'EPD_SPI.h'))) {
+        $path = Join-Path $ideSketch $entry[0]
+        $header = $entry[1]
+        $source = [IO.File]::ReadAllText($path)
+        $localInclude = '"src/ESP32epdx/' + $header + '"'
+        [IO.File]::WriteAllText($path, $source.Replace("<$header>", $localInclude), [Text.UTF8Encoding]::new($false))
+    }
+    Write-Output (Join-Path $ideSketch 'ControlRoom.ino')
+    return
+}
 $options = @()
 if ($ConfigFile) { $options += @('--config-file',$ConfigFile) }
 $fqbn = 'esp32:esp32:esp32'
