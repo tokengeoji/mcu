@@ -17,6 +17,7 @@ static uint32_t busyLowMs;
 // Called by the staged GDEY075Z08 driver at every manufacturer BUSY wait.
 bool panelReady() {
     const uint32_t start = millis();
+    busyLowMs = 0;
     while (!isEPD_W21_BUSY) {
         if (millis() - start >= busyLimitMs) {
             // Sample the input with a weak pull-up only after the vendor wait failed.
@@ -31,8 +32,8 @@ bool panelReady() {
             return false;
         }
         delay(1);
+        busyLowMs = millis() - start;
     }
-    busyLowMs = millis() - start;
     return true;
 }
 

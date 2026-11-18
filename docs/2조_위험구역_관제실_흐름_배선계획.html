@@ -115,7 +115,7 @@ SPI.begin(18, 19, 23, -1);                 // SCK, MISO, MOSI, CS는 별도 제�
 
 
 
-<p>FPC는 전원을 끈 상태에서 연결한다. 사진의 리본 표기는 FPC-C001이다. 소프트웨어 대상은 계획서의 <b>GDEY075Z08</b>이며 최초 구동 전 지급 명세 또는 패널 모델 라벨을 대조한다. 이 모델의 DESPI-C02 RESE 설정은 <b>0.47 Ω</b>이다.</p><p class="source"><a href="#src-panel">[W1]</a><a href="#src-rese">[W8: 제조사 RESE 표 §4.3]</a></p></details>
+<p>USB를 빼고 키트 전원을 끈 뒤, 큰 ESP32-L의 검은 P5 바로 왼쪽에 있는 노란 받침의 <b>P3 전원 점퍼</b> 두 핀에 쇼트캡 하나를 꽂는다. ESP32-L은 이 점퍼를 통해 P5 1번과 DESPI-C02에 3.3 V를 공급한다. <a href="https://www.good-display.com/companyfile/909.html">제조사 회로도</a> · <a href="https://www.good-display.com/news/79.html">제조사 FAQ 1번</a></p><p>FPC는 전원을 끈 상태에서 연결한다. 사진의 리본 표기는 FPC-C001이다. 소프트웨어 대상은 계획서의 <b>GDEY075Z08</b>이며 최초 구동 전 지급 명세 또는 패널 모델 라벨을 대조한다. 이 모델의 작은 DESPI-C02에 있는 P3 은색 RESE 스위치 설정은 <b>0.47 Ω</b>이다.</p><p class="source"><a href="#src-panel">[W1]</a><a href="#src-rese">[W8: 제조사 RESE 표 §4.3]</a></p></details>
 </section>
 
 <section id="power"><div class="sectionhead"><div><span class="secno">06 / POWER FIRST</span><h2>전원과 접지는 신호선보다 먼저 확인</h2></div><span class="badge pending">전원 출력 위치·허용 전류 미확인</span></div>
@@ -124,7 +124,7 @@ SPI.begin(18, 19, 23, -1);                 // SCK, MISO, MOSI, CS는 별도 제�
 <tr><td><b>센서 3.3V 분배</b></td><td>HC-SR04P S1~S5</td><td>검증된 3.3 V 출력 → 빨간 + 레일 → S1·S2·S3·S4·S5의 VCC 모두 3.3 V</td><td>5개 합계 전류, 전압 강하, ECHO 출력 수준을 측정</td></tr>
 <tr><td><b>서보 5V 계열 전원</b></td><td>SG90 VCC</td><td>지급품 정격이 5 V를 포함하고 출력 전류가 충분할 때 사용</td><td>기동·부하 시 전압 강하와 허용 전류 확인. 부족하면 실습실 전원 등 보완안 필요</td></tr>
 <tr><td><b>ESP32-L 전원</b></td><td>ESP32-L과 화면 회로</td><td>제조사 지정 USB Type-C 5V 입력</td><td>STM32 전원과 공통 GND 연결</td></tr>
-<tr><td><b>화면 3.3V</b></td><td>DESPI-C02 → e-Ink</td><td>ESP32-L 커넥터 P5의 1번 핀 → DESPI-C02 커넥터 P2의 1번 핀</td><td>갱신 시 실제 전압·전류 확인</td></tr>
+<tr><td><b>화면 3.3V</b></td><td>DESPI-C02 → e-Ink</td><td>ESP32-L P3 쇼트캡 → P5의 1번 핀(3.3V_S2) → DESPI-C02 P2의 1번 핀</td><td>갱신 시 실제 전압·전류 확인</td></tr>
 <tr><td><b>공통 접지</b></td><td>STM32·ESP32·초음파·서보·화면 GND</td><td>센서 5개의 GND와 센서 전원 음극 → 같은 − 레일 ↔ MCU 모듈 J5 4번</td><td>서보 전류 귀환선은 센서의 가는 GND 배선에 연속 직렬 연결하지 않음</td></tr>
 </tbody></table></div>
 <div class="cols"><div class="card"><h3>브레드보드에는 3.3V와 GND를 우선 배정</h3><p>브레드보드는 전압을 만드는 장치가 아니라 접점을 연결하는 도구다. <b>3.3V와 5V를 같은 전원 레일에 연결하지 않는다.</b> 전원 레일이 중간에 끊긴 제품인지 테스터로 확인하고 라벨을 붙인다.</p></div><div class="card"><h3>서보 전원선은 구분</h3><p>SG90의 Signal만 PA8에 연결한다. VCC는 검증된 전원, GND는 공통 접지로 연결한다. 모터 전원 경로는 브레드보드의 불명확한 접점 허용 전류에 의존하지 않고 적합한 전원 단자·배선을 우선 사용한다.</p></div></div>

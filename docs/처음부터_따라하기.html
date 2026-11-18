@@ -21,7 +21,7 @@
 <tr><td>S4 · 복도 4</td><td><b>3.3 V</b></td><td>HC-SR04P VCC → + 레일</td></tr>
 <tr><td>S5 · 위험지점</td><td><b>3.3 V</b></td><td>HC-SR04P VCC → + 레일</td></tr>
 <tr><td>Good Display ESP32-L</td><td>USB 입력 <b>5 V</b></td><td>PC USB 포트 ↔ ESP32-L USB-C 데이터 케이블. 스위치는 ON. STM32와의 UART 신호 수준은 3.3 V.</td></tr>
-<tr><td>DESPI-C02</td><td><b>3.3 V</b></td><td>ESP32-L 커넥터 P5의 1번 핀(3.3V) → DESPI-C02 커넥터 P2의 1번 핀(3.3V)</td></tr>
+<tr><td>DESPI-C02</td><td><b>3.3 V</b></td><td>큰 ESP32-L의 P3 두 핀에 쇼트캡 → 검은 P5의 1번 핀(3.3V) → DESPI-C02 P2의 1번 핀(3.3V). <a href="#p1">점퍼 위치 사진</a></td></tr>
 <tr><td>문 서보 SG90</td><td>제품 정격의 별도 전원</td><td>서보 V+와 GND. TowerPro SG90 정격 표기는 4.8 V다. 지급품의 모델과 구동 전류를 확인해 공급한다.</td></tr>
 <tr><td>키트 LED·PIEZO·UART</td><td>키트 전원</td><td>표시된 신호 단자에 점퍼를 잇는다.</td></tr>
 <tr><td>4×3 키패드</td><td>행·열 접점</td><td>R0~R3·C0~C2의 일곱 선을 연결한다.</td></tr></tbody></table><div class="box warn"><b>지급받은 초음파 모듈이 5 V 전용이면</b> · 부품 번호와 제조사 전원 사양을 먼저 확인한다. 5 V 전용 모듈은 별도 5 V 전원을 쓰며, 이 표의 HC-SR04P용 3.3 V 레일과 분리한다. ECHO가 5 V로 나오면 STM32 입력 앞에서 3.3 V로 변환하고, 센서가 3.3 V TRIG 입력을 인식하는지도 해당 사양에서 확인한다.</div><p class="source"><a href="https://towerpro.com.tw/product/sg90-analog/">TowerPro SG90 사양</a> · <a href="https://www.good-display.com/companyfile/909.html">Good Display ESP32-L 제조사 회로도</a></p></div></section>
