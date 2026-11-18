@@ -1,0 +1,20 @@
+# IAR Embedded Workbench intermediates and machine-specific settings
+EMB_FLASH/
+settings/
+*.dep
+*.ewt
+*.ewp.bak
+*.eww.bak
+*.ewd.bak
+stm32/lsprst7.dll
+stm32/lsprst7.tgz
+stm32/tmpPrst.tgz
+
+# Local Arduino build output
+.build/
+build/
+
+# Local editor state
+.vs/
+.vscode/
+Thumbs.db
