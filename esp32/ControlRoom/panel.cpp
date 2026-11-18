@@ -10,6 +10,7 @@ static constexpr int rowBytes = EPD_WIDTH / 8;
 static constexpr size_t planeBytes = EPD_HEIGHT * rowBytes;
 static constexpr uint32_t busyLimitMs = 30000;
 static bool timedOut, needsFull = true;
+static bool clearedAtStartup;
 static int partialCount;
 static uint32_t busyLowMs;
 
@@ -144,8 +145,35 @@ static bool drawPartial(const Window &w) {
     return !timedOut;
 }
 
+static bool clearAtStartup() {
+    // GDEY075Z08 example: initialize, clear both color planes, sleep, wait 3 s.
+    Serial.println("EPD: initializing for white clear.");
+    SPI.beginTransaction(SPISettings(10000000, MSBFIRST, SPI_MODE0));
+    EPD_Init();
+    bool refreshObserved = false;
+    if (!timedOut) {
+        Serial.println("EPD: sending white frame.");
+        EPD_WhiteScreen_White();
+        refreshObserved = !timedOut && busyLowMs > 0;
+        if (!timedOut) EPD_DeepSleep();
+    }
+    SPI.endTransaction();
+    if (timedOut) return false;
+    if (!refreshObserved) {
+        Serial.println("EPD: no BUSY pulse on white refresh; check P5 BUSY and panel model.");
+        return false;
+    }
+    Serial.println("EPD: white refresh complete.");
+    delay(3000);
+    return true;
+}
+
 bool drawScreen(const Screen &s) {
     timedOut = false;
+    if (!clearedAtStartup) {
+        clearedAtStartup = clearAtStartup();
+        if (!clearedAtStartup) return false;
+    }
     makePlanes(s);
     Window windows[3];
     int changed = 0;

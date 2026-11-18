@@ -39,12 +39,25 @@ arduino-cli core install esp32:esp32@2.0.17 --additional-urls $index
 
 첫 빌드가 제조사 공식 커밋의 소스 파일을 내려받는다. 같은 리비전으로 다시 빌드할 때는 로컬 캐시를 사용한다. 바이너리는 `.build/bin`에 생성된다. ESP32-L USB를 뽑은 상태와 연결해 ON에 둔 상태에서 `arduino-cli board list`를 각각 실행한다. 새로 생긴 포트가 예를 들어 `COM7`이면 `.\build.ps1 -UploadPort COM7`을 실행한다. 새 포트가 없으면 데이터 케이블과 장치 관리자에서 CH340 인식 여부를 확인한다. CLI 경로와 설정 파일은 `-ArduinoCli`, `-ConfigFile`로 지정할 수 있다. [Espressif 보드 코어](https://github.com/espressif/arduino-esp32/releases/tag/2.0.17)
 
-## 화면이 비어 있을 때
+## 버스 도착정보가 남거나 지도가 뜨지 않을 때
 
-1. 업로드를 마친 뒤 ESP32-L USB 포트(COM4)를 직렬 터미널에서 **115200 baud, 8N1**로 연다. 시작 로그를 보려면 ESP32-L의 빨간 RESET 버튼을 누른다. 이 장비에서는 `UART: first valid STM32 position frame.`과 `UART: first valid STM32 status frame.`을 모두 수신했다. 실물 로그에서는 패널 초기화 중 BUSY(GPIO13)가 30초 동안 LOW였고 내부 약한 풀업에서도 LOW를 유지했다. 지도 데이터 전송 단계에 도달하기 전에 초기화가 시간 초과됐다.
-2. 두 보드의 전원을 끄고 USB 전원도 분리한다. ESP32-L 하단의 검은 P5 8구에 DESPI-C02의 P2 8핀을 모두 꽂는다. 한쪽 끝의 3.3V ↔ 3.3V와 반대쪽 끝의 BUSY ↔ BUSY를 함께 맞춘다. DESPI-C02의 흰색 P1에 패널 리본을 반듯하게 끝까지 넣고 잠금쇠를 닫는다. [결선도](../docs/하드웨어_연결.md#esp32-l-p5와-despi-c02-p2)
-3. 패널 후면 라벨이나 지급 명세에서 GDEY075Z08을 확인한다. 리본 인쇄 FPC-C001만으로는 패널 모델을 특정할 수 없다. GDEY075Z08이면 RESE를 0.47 Ω로 맞추고 PC USB를 다시 연결해 스위치를 ON에 둔다. 다른 모델이면 해당 모델용 Good Display 드라이버와 RESE 값을 먼저 확인한다.
-4. GDEY075Z08의 첫 전체 갱신이 끝나면 STM32 연결 전에도 START / S1과 빨간 HAZARD ZONE이 있는 지도가 예상된다. STM32가 연결되지 않았을 때 상태란은 STM32 STATUS UNAVAILABLE다. 전원을 다시 켰을 때 USB 로그가 `EPD: panel initialized; sending map.`까지 진행하는지 확인한다. `BUSY LOW for 30 s`가 반복되면 P5·P2 접점, P1 잠금 및 패널 모델을 다시 확인한다.
+조립 후 촬영한 패널에는 예전에 표시한 **버스 도착정보**가 남아 있었다. 전자종이는 전원이 끊겨도 마지막 그림을 유지한다. 이 펌웨어는 부팅 후 패널을 초기화해 전체를 흰색으로 한 번 갱신하고, 패널을 절전 상태로 둔다. 3초 후 다시 초기화해 관제 지도를 그린다. [Good Display 패널 특성](https://www.good-display.com/product/394.html)
+
+1. 업로드를 마친 뒤 ESP32-L USB 포트(COM4)를 직렬 터미널에서 **115200 baud, 8N1**로 연다. 시작 로그를 보려면 ESP32-L의 빨간 RESET 버튼을 누른다. 이 장비에서는 `UART: first valid STM32 position frame.`과 `UART: first valid STM32 status frame.`을 모두 수신했다. 이전 시험에서는 초기화 중 BUSY(GPIO13)가 30초간 LOW였다. 새 펌웨어 시험에서는 흰 화면 명령을 전송했지만 갱신을 확인할 BUSY 펄스가 없었다. 흰색 지우기 완료와 지도 전송은 아직 확인되지 않았다. 이번 USB 로그는 `EPD: sending white frame.` 다음에 `EPD: no BUSY pulse on white refresh; check P5 BUSY and panel model.`을 출력했다.
+2. **큰 ESP32-L의 P3 전원 점퍼를 먼저 확인한다.** 두 보드 전원을 끄고 USB 케이블도 분리한다. 큰 ESP32-L에서 검은 P5 바로 왼쪽, A4·A5 인쇄 옆의 노란 받침 위 금속 핀 두 개가 P3 전원 점퍼다. 사진에는 두 핀이 노출돼 있다. 실물에도 캡이 없으면 해당 두 핀을 함께 덮는 2핀 쇼트캡을 끼운다. 패널 모델에 맞는 RESE 설정을 확인한 뒤 USB 전원을 다시 연결해 화면을 시험한다. 회로도에서 패널 전원은 3.3 V → P3 → R1(0 Ω) → 3.3V_S2 → P5 1번으로 이어진다. [조립 사진](../docs/처음부터_따라하기.html#p1) · [제조사 회로도](https://www.good-display.com/companyfile/909.html) · [Good Display FAQ 1번](https://www.good-display.com/news/79.html)
+3. 화면이 그대로이면 다시 두 보드의 전원을 끄고 USB를 뺀다. ESP32-L 하단의 검은 P5 8구에 DESPI-C02의 P2 8핀을 모두 꽂는다. 한쪽 끝의 3.3V ↔ 3.3V와 반대쪽 끝의 BUSY ↔ BUSY를 함께 맞춘다. DESPI-C02의 흰색 P1에 패널 리본을 반듯하게 끝까지 넣고 잠금쇠를 닫는다. [결선도](../docs/하드웨어_연결.md#esp32-l-p5와-despi-c02-p2)
+4. 패널 후면 라벨이나 지급 명세에서 GDEY075Z08을 확인한다. 리본 인쇄 FPC-C001만으로는 패널 모델을 특정할 수 없다. GDEY075Z08이면 작은 DESPI-C02의 P3 은색 RESE 스위치를 0.47 Ω로 맞추고 PC USB를 다시 연결해 스위치를 ON에 둔다. 다른 모델이면 해당 모델용 Good Display 드라이버와 RESE 값을 먼저 확인한다.
+5. GDEY075Z08이 정상 응답하면 기존 버스 정보 → 흰 화면 → START / S1과 빨간 HAZARD ZONE이 있는 지도의 순서로 바뀐다. STM32 없이도 이 과정을 시험할 수 있다. STM32가 연결되지 않았을 때 상태란은 STM32 STATUS UNAVAILABLE다. 전원을 다시 켰을 때 USB 로그가 `EPD: panel initialized; sending map.`까지 진행하는지 확인한다. `BUSY LOW for 30 s`가 반복되면 P5·P2 접점, P1 잠금 및 패널 모델을 다시 확인한다.
+
+정상 순서는 아래와 같다. 세 번째 줄은 흰색 갱신 후 패널 절전 단계까지 끝났을 때 출력된다. 네 번째 줄은 3초 뒤 지도용 초기화를 시작할 때 출력된다. 흰색 지우기가 완료되면 다음 전원 켜기나 RESET까지 반복하지 않는다. BUSY 오류가 발생하면 다음 자동 시도는 180초 뒤다. 전원을 끄고 결선을 바로잡은 뒤 다시 켜면 부팅 시점에 다시 시도한다.
+
+```text
+EPD: initializing for white clear.
+EPD: sending white frame.
+EPD: white refresh complete.
+EPD: starting full refresh (GDEY075Z08).
+EPD: panel initialized; sending map.
+```
 
 ## 화면과 좌표
 

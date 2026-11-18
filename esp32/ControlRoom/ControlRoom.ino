@@ -85,10 +85,10 @@ static void updateDisplay() {
     }
     if (displayed && !memcmp(&screen, &previous, sizeof(screen))) return;
     if (!drawScreen(screen)) {
-        Serial.println("Display timeout or memory error; retrying full refresh.");
+        Serial.println("EPD: refresh unconfirmed; check power jumper P3 on ESP32-L. Retry in 180 s or restart.");
         Serial2.print("ERROR\r\n");
         displayed = false;
-        delay(3000);
+        delay(180000);  // Good Display tri-color refresh interval after an unconfirmed update.
         return;
     }
     displayed = true;
