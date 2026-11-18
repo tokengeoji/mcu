@@ -1,15 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1520" height="1320" viewBox="0 0 1520 1320" role="img" aria-labelledby="dw-title dw-desc"><title id="dw-title">STM32와 전자종이 표시부 결선도</title><desc id="dw-desc">STM32와 ESP32-L의 UART 두 선과 공통 접지, ESP32-L P5와 DESPI-C02 P2의 여덟 선, 패널 리본과 개별 전원 연결을 나타낸다.</desc><g font-family="'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1520" height="1320" viewBox="0 0 1520 1320" role="img" aria-labelledby="dw-title dw-desc"><title id="dw-title">STM32와 전자종이 표시부 결선도</title><desc id="dw-desc">UART 세 선은 ESP32-L의 커넥터 P6에 꽂는다. USB-C가 위일 때 오른쪽 노란 소켓 위에서 첫째 SCL, 둘째 SDA, 넷째 GND다. 왼쪽의 커넥터 P9와 아래쪽의 전자종이 커넥터 P5도 구별한다.</desc><g font-family="'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif">
 <rect x="0" y="0" width="1520" height="1320" rx="0" fill="#F6F9FA" stroke="none" stroke-width="2"/>
 <text x="64" y="77" fill="#193747" font-size="46" font-weight="700">STM32와 전자종이 표시부 결선도</text>
-<text x="66" y="119" fill="#456371" font-size="23">전원을 끄고 단자 이름을 대조한다. 화살표는 신호나 전원을 보내는 방향이다.</text>
-<text x="64" y="178" fill="#193747" font-size="31" font-weight="700">보드 간 UART</text>
+<text x="66" y="119" fill="#456371" font-size="23">전원을 끄고 ESP32-L의 USB-C 단자를 위로 놓는다. 오른쪽 위 노란 소켓에 인쇄된 P6를 찾는다.</text>
+<text x="64" y="178" fill="#193747" font-size="31" font-weight="700">보드 간 UART · 세 선 모두 ESP32-L의 커넥터 P6에 연결</text>
 <text x="1448" y="177" fill="#456371" font-size="22" text-anchor="end">3.3 V TTL   ·   115200 baud   ·   8N1</text>
 <rect x="65" y="203" width="432" height="268" rx="12" fill="#E7F2F4" stroke="#A9C7CD" stroke-width="2"/>
 <rect x="998" y="203" width="457" height="268" rx="12" fill="#E6F1F8" stroke="#A2C4D6" stroke-width="2"/>
 <text x="91" y="248" fill="#193747" font-size="30" font-weight="700">STM32F103RBT6</text>
 <text x="91" y="280" fill="#456371" font-size="20">한백 MCU 모듈 · 키트 전원</text>
-<text x="1028" y="248" fill="#193747" font-size="30" font-weight="700">Good Display ESP32-L</text>
-<text x="1028" y="280" fill="#456371" font-size="20">P6 헤더 · 보드 USB 입력 5 V</text>
+<text x="1028" y="248" fill="#193747" font-size="30" font-weight="700">ESP32-L · 커넥터 P6</text>
+<text x="1028" y="280" fill="#456371" font-size="20">오른쪽 위 노란 소켓 · 보드 전원은 USB 5 V</text>
 <text x="91" y="331" fill="#193747" font-size="26" font-weight="700">J3  PB10</text>
 <text x="465" y="330" fill="#456371" font-size="21" text-anchor="end">USART3 TX</text>
 <path d="M504 323H991" fill="none" stroke="#006C72" stroke-width="3"/>
@@ -17,7 +17,7 @@
 <circle cx="497" cy="323" r="6" fill="#FFF" stroke="#006C72" stroke-width="3"/>
 <circle cx="998" cy="323" r="6" fill="#FFF" stroke="#006C72" stroke-width="3"/>
 <text x="749" y="312" fill="#006C72" font-size="18" text-anchor="middle">위치 · 상태</text>
-<text x="1029" y="331" fill="#193747" font-size="26" font-weight="700">P6-9  SDA</text>
+<text x="1029" y="331" fill="#193747" font-size="26" font-weight="700">9번 핀 · SDA</text>
 <text x="1429" y="330" fill="#456371" font-size="20" text-anchor="end">GPIO21 · UART2 RX</text>
 <text x="91" y="386" fill="#193747" font-size="26" font-weight="700">J3  PB11</text>
 <text x="465" y="385" fill="#456371" font-size="21" text-anchor="end">USART3 RX</text>
@@ -26,91 +26,92 @@
 <circle cx="497" cy="378" r="6" fill="#FFF" stroke="#654695" stroke-width="3"/>
 <circle cx="998" cy="378" r="6" fill="#FFF" stroke="#654695" stroke-width="3"/>
 <text x="749" y="367" fill="#654695" font-size="18" text-anchor="middle">READY · ERROR</text>
-<text x="1029" y="386" fill="#193747" font-size="26" font-weight="700">P6-10  SCL</text>
+<text x="1029" y="386" fill="#193747" font-size="26" font-weight="700">10번 핀 · SCL</text>
 <text x="1429" y="385" fill="#456371" font-size="20" text-anchor="end">GPIO22 · UART2 TX</text>
-<text x="91" y="441" fill="#193747" font-size="26" font-weight="700">J5-4  GND</text>
+<text x="91" y="441" fill="#193747" font-size="26" font-weight="700">J5의 4번 핀 · GND</text>
 <text x="465" y="440" fill="#456371" font-size="21" text-anchor="end">공통 접지</text>
 <path d="M504 433H991" fill="none" stroke="#405360" stroke-width="3"/>
 <circle cx="497" cy="433" r="6" fill="#FFF" stroke="#405360" stroke-width="3"/>
 <circle cx="998" cy="433" r="6" fill="#FFF" stroke="#405360" stroke-width="3"/>
 <text x="749" y="422" fill="#405360" font-size="18" text-anchor="middle">공통 GND</text>
-<text x="1029" y="441" fill="#193747" font-size="26" font-weight="700">P6-7  GND</text>
+<text x="1029" y="441" fill="#193747" font-size="26" font-weight="700">7번 핀 · GND</text>
 <text x="1429" y="440" fill="#456371" font-size="20" text-anchor="end">공통 접지</text>
-<text x="65" y="508" fill="#456371" font-size="22">두 보드는 각자 전원을 공급한다. 보드 사이에는 위의 세 선만 연결하고 각 전원의 양극은 분리한다.</text>
+<text x="65" y="508" fill="#456371" font-size="22">USB 쪽에서 아래로 보면 첫째 구멍은 SCL(10번 핀), 둘째는 SDA(9번 핀), 셋째는 3V3(비움), 넷째는 GND(7번 핀)다.</text>
+<text x="65" y="543" fill="#456371" font-size="22">커넥터 P9는 반대쪽(왼쪽)의 5V · 3V3 · GND · RESET 등이 인쇄된 소켓이다. 이번 UART 배선에서는 비워 둔다.</text>
 <text x="65" y="585" fill="#193747" font-size="31" font-weight="700">전자종이 8핀 헤더</text>
 <text x="1455" y="585" fill="#456371" font-size="22" text-anchor="end">두 기판의 3.3V 표기를 같은 쪽에 맞춰 결합</text>
 <rect x="65" y="612" width="432" height="472" rx="12" fill="#E6F1F8" stroke="#A2C4D6" stroke-width="2"/>
 <rect x="998" y="612" width="457" height="472" rx="12" fill="#E7F2F4" stroke="#A9C7CD" stroke-width="2"/>
-<text x="91" y="658" fill="#193747" font-size="30" font-weight="700">ESP32-L  ·  P5</text>
-<text x="91" y="690" fill="#456371" font-size="20">ESP32의 전자종이 소켓</text>
-<text x="1029" y="658" fill="#193747" font-size="30" font-weight="700">DESPI-C02  ·  P2</text>
+<text x="91" y="658" fill="#193747" font-size="30" font-weight="700">ESP32-L · 커넥터 P5</text>
+<text x="91" y="690" fill="#456371" font-size="20">보드 아래쪽 검은 전자종이 소켓</text>
+<text x="1029" y="658" fill="#193747" font-size="30" font-weight="700">DESPI-C02 · 커넥터 P2</text>
 <text x="1029" y="690" fill="#456371" font-size="20">어댑터의 8핀 헤더</text>
-<text x="92" y="741" fill="#193747" font-size="24" font-weight="700">1   3.3V</text>
+<text x="92" y="741" fill="#193747" font-size="24" font-weight="700">1번 핀 · 3.3V</text>
 <text x="468" y="741" fill="#456371" font-size="21" text-anchor="end">전원 출력</text>
 <path d="M504 734H991" fill="none" stroke="#A44824" stroke-width="3"/>
 <path d="M965 727L977 734L965 741" fill="none" stroke="#A44824" stroke-width="3.3" stroke-linejoin="round"/>
 <circle cx="497" cy="734" r="6" fill="#FFF" stroke="#A44824" stroke-width="3"/>
 <circle cx="998" cy="734" r="6" fill="#FFF" stroke="#A44824" stroke-width="3"/>
 <text x="747" y="727" fill="#A44824" font-size="18" text-anchor="middle">패널 구동 전원</text>
-<text x="1029" y="741" fill="#193747" font-size="24" font-weight="700">1   3.3V</text>
-<text x="92" y="786" fill="#193747" font-size="24" font-weight="700">2   GND</text>
+<text x="1029" y="741" fill="#193747" font-size="24" font-weight="700">1번 핀 · 3.3V</text>
+<text x="92" y="786" fill="#193747" font-size="24" font-weight="700">2번 핀 · GND</text>
 <text x="468" y="786" fill="#456371" font-size="21" text-anchor="end">공통 접지</text>
 <path d="M504 779H991" fill="none" stroke="#405360" stroke-width="3"/>
 <circle cx="497" cy="779" r="6" fill="#FFF" stroke="#405360" stroke-width="3"/>
 <circle cx="998" cy="779" r="6" fill="#FFF" stroke="#405360" stroke-width="3"/>
 <text x="747" y="772" fill="#405360" font-size="18" text-anchor="middle">공통 GND</text>
-<text x="1029" y="786" fill="#193747" font-size="24" font-weight="700">2   GND</text>
-<text x="92" y="831" fill="#193747" font-size="24" font-weight="700">3   SDI</text>
+<text x="1029" y="786" fill="#193747" font-size="24" font-weight="700">2번 핀 · GND</text>
+<text x="92" y="831" fill="#193747" font-size="24" font-weight="700">3번 핀 · SDI</text>
 <text x="468" y="831" fill="#456371" font-size="21" text-anchor="end">GPIO23 · MOSI</text>
 <path d="M504 824H991" fill="none" stroke="#006C72" stroke-width="3"/>
 <path d="M965 817L977 824L965 831" fill="none" stroke="#006C72" stroke-width="3.3" stroke-linejoin="round"/>
 <circle cx="497" cy="824" r="6" fill="#FFF" stroke="#006C72" stroke-width="3"/>
 <circle cx="998" cy="824" r="6" fill="#FFF" stroke="#006C72" stroke-width="3"/>
 <text x="747" y="817" fill="#006C72" font-size="18" text-anchor="middle">직렬 데이터</text>
-<text x="1029" y="831" fill="#193747" font-size="24" font-weight="700">3   SDI</text>
-<text x="92" y="876" fill="#193747" font-size="24" font-weight="700">4   SCK</text>
+<text x="1029" y="831" fill="#193747" font-size="24" font-weight="700">3번 핀 · SDI</text>
+<text x="92" y="876" fill="#193747" font-size="24" font-weight="700">4번 핀 · SCK</text>
 <text x="468" y="876" fill="#456371" font-size="21" text-anchor="end">GPIO18</text>
 <path d="M504 869H991" fill="none" stroke="#006C72" stroke-width="3"/>
 <path d="M965 862L977 869L965 876" fill="none" stroke="#006C72" stroke-width="3.3" stroke-linejoin="round"/>
 <circle cx="497" cy="869" r="6" fill="#FFF" stroke="#006C72" stroke-width="3"/>
 <circle cx="998" cy="869" r="6" fill="#FFF" stroke="#006C72" stroke-width="3"/>
 <text x="747" y="862" fill="#006C72" font-size="18" text-anchor="middle">클록</text>
-<text x="1029" y="876" fill="#193747" font-size="24" font-weight="700">4   SCK</text>
-<text x="92" y="921" fill="#193747" font-size="24" font-weight="700">5   CS</text>
+<text x="1029" y="876" fill="#193747" font-size="24" font-weight="700">4번 핀 · SCK</text>
+<text x="92" y="921" fill="#193747" font-size="24" font-weight="700">5번 핀 · CS</text>
 <text x="468" y="921" fill="#456371" font-size="21" text-anchor="end">GPIO27</text>
 <path d="M504 914H991" fill="none" stroke="#006C72" stroke-width="3"/>
 <path d="M965 907L977 914L965 921" fill="none" stroke="#006C72" stroke-width="3.3" stroke-linejoin="round"/>
 <circle cx="497" cy="914" r="6" fill="#FFF" stroke="#006C72" stroke-width="3"/>
 <circle cx="998" cy="914" r="6" fill="#FFF" stroke="#006C72" stroke-width="3"/>
 <text x="747" y="907" fill="#006C72" font-size="18" text-anchor="middle">칩 선택</text>
-<text x="1029" y="921" fill="#193747" font-size="24" font-weight="700">5   CS</text>
-<text x="92" y="966" fill="#193747" font-size="24" font-weight="700">6   D/C</text>
+<text x="1029" y="921" fill="#193747" font-size="24" font-weight="700">5번 핀 · CS</text>
+<text x="92" y="966" fill="#193747" font-size="24" font-weight="700">6번 핀 · D/C</text>
 <text x="468" y="966" fill="#456371" font-size="21" text-anchor="end">GPIO14</text>
 <path d="M504 959H991" fill="none" stroke="#006C72" stroke-width="3"/>
 <path d="M965 952L977 959L965 966" fill="none" stroke="#006C72" stroke-width="3.3" stroke-linejoin="round"/>
 <circle cx="497" cy="959" r="6" fill="#FFF" stroke="#006C72" stroke-width="3"/>
 <circle cx="998" cy="959" r="6" fill="#FFF" stroke="#006C72" stroke-width="3"/>
 <text x="747" y="952" fill="#006C72" font-size="18" text-anchor="middle">데이터 / 명령</text>
-<text x="1029" y="966" fill="#193747" font-size="24" font-weight="700">6   D/C</text>
-<text x="92" y="1011" fill="#193747" font-size="24" font-weight="700">7   RES</text>
+<text x="1029" y="966" fill="#193747" font-size="24" font-weight="700">6번 핀 · D/C</text>
+<text x="92" y="1011" fill="#193747" font-size="24" font-weight="700">7번 핀 · RES</text>
 <text x="468" y="1011" fill="#456371" font-size="21" text-anchor="end">GPIO12</text>
 <path d="M504 1004H991" fill="none" stroke="#006C72" stroke-width="3"/>
 <path d="M965 997L977 1004L965 1011" fill="none" stroke="#006C72" stroke-width="3.3" stroke-linejoin="round"/>
 <circle cx="497" cy="1004" r="6" fill="#FFF" stroke="#006C72" stroke-width="3"/>
 <circle cx="998" cy="1004" r="6" fill="#FFF" stroke="#006C72" stroke-width="3"/>
 <text x="747" y="997" fill="#006C72" font-size="18" text-anchor="middle">리셋</text>
-<text x="1029" y="1011" fill="#193747" font-size="24" font-weight="700">7   RES</text>
-<text x="92" y="1056" fill="#193747" font-size="24" font-weight="700">8   BUSY</text>
+<text x="1029" y="1011" fill="#193747" font-size="24" font-weight="700">7번 핀 · RES</text>
+<text x="92" y="1056" fill="#193747" font-size="24" font-weight="700">8번 핀 · BUSY</text>
 <text x="468" y="1056" fill="#456371" font-size="21" text-anchor="end">GPIO13 · 입력</text>
 <path d="M504 1049H991" fill="none" stroke="#654695" stroke-width="3"/>
 <path d="M530 1042L518 1049L530 1056" fill="none" stroke="#654695" stroke-width="3.3" stroke-linejoin="round"/>
 <circle cx="497" cy="1049" r="6" fill="#FFF" stroke="#654695" stroke-width="3"/>
 <circle cx="998" cy="1049" r="6" fill="#FFF" stroke="#654695" stroke-width="3"/>
 <text x="747" y="1042" fill="#654695" font-size="18" text-anchor="middle">패널 동작 상태</text>
-<text x="1029" y="1056" fill="#193747" font-size="24" font-weight="700">8   BUSY</text>
+<text x="1029" y="1056" fill="#193747" font-size="24" font-weight="700">8번 핀 · BUSY</text>
 <text x="1425" y="1055" fill="#456371" font-size="20" text-anchor="end">상태 출력</text>
 <rect x="65" y="1117" width="432" height="141" rx="12" fill="#E7F2F4" stroke="#A9C7CD" stroke-width="2"/>
-<text x="91" y="1163" fill="#193747" font-size="30" font-weight="700">DESPI-C02  ·  P1</text>
+<text x="91" y="1163" fill="#193747" font-size="30" font-weight="700">DESPI-C02 · 커넥터 P1</text>
 <text x="91" y="1195" fill="#456371" font-size="20">패널 리본 소켓</text>
 <text x="91" y="1232" fill="#456371" font-size="20">전원을 끈 뒤 리본을 꽂고 잠근다.</text>
 <rect x="998" y="1117" width="457" height="141" rx="12" fill="#FFFFFF" stroke="#BFCCD0" stroke-width="2"/>

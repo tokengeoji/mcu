@@ -23,12 +23,14 @@ STM32는 실습 예제에 동봉된 **STM32F10x Firmware Library V1.0**을 사�
 
 보드의 핀 인쇄를 기준으로 연결한다. 두 제어 보드는 GND를 공유한다. STM32·ESP32 사이의 신호는 3.3 V TTL이며 보드별 전원 출력은 따로 둔다.
 
+ESP32-L은 부품 면의 USB-C 단자를 위로 둔다. STM32 점퍼 3개는 모두 오른쪽 빨간 버튼 아래의 노란 **커넥터 P6**에 꽂는다. 위에서 첫째가 `SCL`, 둘째가 `SDA`, 셋째가 `3V3`(비움), 넷째가 `GND`다. 왼쪽의 노란 8구 **커넥터 P9**는 이번 UART 연결에서 비워 둔다. [실물 사진으로 위치 찾기](docs/esp32-connectors.png)
+
 | 장치 | STM32F103RBT6 | 반대편 |
 | --- | --- | --- |
 | 하이퍼터미널 | PA9 USART1_TX / PA10 USART1_RX | 실습 키트 UART 모듈 TX0 / RX0. USB 직렬 포트를 PC에 연결 |
-| 전자종이로 전송 | PB10 USART3_TX | ESP32-L **P6-9 SDA**, GPIO21을 UART2 RX로 설정 |
-| 전자종이에서 수신 | PB11 USART3_RX | ESP32-L **P6-10 SCL**, GPIO22를 UART2 TX로 설정 |
-| 보드 간 기준 전위 | GND | ESP32-L **P6-7 GND** |
+| 전자종이로 전송 | PB10 USART3_TX | 커넥터 P6 위에서 둘째 **SDA** (9번 핀, GPIO21 / UART2 RX) |
+| 전자종이에서 수신 | PB11 USART3_RX | 커넥터 P6 위에서 첫째 **SCL** (10번 핀, GPIO22 / UART2 TX) |
+| 보드 간 기준 전위 | GND | 커넥터 P6 위에서 넷째 **GND** (7번 핀) |
 | 복도 센서 S1…S4 | TRIG PC8, PC9, PC10, PC11 순서 / ECHO PA0, PA1, PA2, PA3 순서 | 각 센서의 TRIG / ECHO. ECHO는 TIM2_CH1…4 |
 | 위험지점 S5 | TRIG PC12 / ECHO PB6 | S5 TRIG / ECHO. PB6은 TIM4_CH1 |
 | LED A / B | PA4 / PA5 | 실습 키트 LED0 / LED1 |

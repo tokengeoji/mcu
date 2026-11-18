@@ -96,7 +96,7 @@ static void updateDisplay() {
 void setup() {
     Serial.begin(115200);
     Serial2.setRxBufferSize(2048);
-    // ESP32-L P6-9 SDA and P6-10 SCL are directly connected to GPIO21/22.
+    // ESP32-L header P6: pin 9 (SDA/GPIO21) is RX; pin 10 (SCL/GPIO22) is TX.
     Serial2.begin(115200, SERIAL_8N1, 21, 22);
     newest = xQueueCreate(1, sizeof(Feed));
     if (!newest || xTaskCreate(readLink, "STM32 RX", 4096, nullptr, 2, nullptr) != pdPASS) {
