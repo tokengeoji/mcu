@@ -8,11 +8,17 @@ unsigned char *PartImage;
 static unsigned char *blackPlane, *redPlane;
 static constexpr int rowBytes = EPD_WIDTH / 8;
 static constexpr size_t planeBytes = EPD_HEIGHT * rowBytes;
+static constexpr int startX = 100, startY = 110;
 static constexpr uint32_t busyLimitMs = 30000;
 static bool timedOut, needsFull = true;
 static bool clearedAtStartup;
 static int partialCount;
 static uint32_t busyLowMs;
+static uint32_t completedRefreshes;
+
+uint32_t panelRefreshCount() {
+    return completedRefreshes;
+}
 
 // Called by the staged GDEY075Z08 driver at every manufacturer BUSY wait.
 bool panelReady() {
@@ -71,7 +77,7 @@ bool locate(const Position &p, int &x, int &y) {
     distance *= direction;
     if (distance < 0 || distance > c.length_mm) return false;
     const int fraction = direction > 0 ? (int)distance : c.length_mm - (int)distance;
-    const int left[] = {100, 650, 270, 270}, top[] = {110, 110, 250, 250};
+    const int left[] = {startX, 650, 270, 270}, top[] = {startY, startY, 250, 250};
     const int span[] = {550, 140, 380, 135};
     const int i = p.corridor - 1, delta = fraction * span[i] / c.length_mm;
     x = left[i] + (horizontal ? delta : 0);
@@ -82,32 +88,41 @@ bool locate(const Position &p, int &x, int &y) {
 static void makePlanes(const Screen &s) {
     Paint_SelectImage(blackPlane);
     Paint_Clear(WHITE);
-    Paint_DrawRectangle(42, 45, 758, 432, BLACK, DRAW_FILL_EMPTY, DOT_PIXEL_2X2);
-    // The four centre lines and labels follow the 800 x 480 map in the supplied HTML.
-    Paint_DrawRectangle(85, 89, 671, 131, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
-    Paint_DrawRectangle(629, 110, 671, 271, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
-    Paint_DrawRectangle(249, 229, 650, 271, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
-    Paint_DrawRectangle(249, 250, 291, 401, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
-    Paint_DrawString_EN(80, 58, "START / S1", &Font16, BLACK, WHITE);
-    Paint_DrawString_EN(688, 150, "S2", &Font16, BLACK, WHITE);
-    Paint_DrawString_EN(692, 236, "S3", &Font16, BLACK, WHITE);
-    Paint_DrawString_EN(310, 380, "S4 / DOOR", &Font16, BLACK, WHITE);
-    Paint_DrawString_EN(44, 13, s.location, &Font16, BLACK, WHITE);
-    Paint_DrawString_EN(44, 448, s.state, &Font16, BLACK, WHITE);
+    Paint_DrawRectangle(32, 45, 768, 432, BLACK, DRAW_FILL_EMPTY, DOT_PIXEL_2X2);
+    // Join the four corridors before filling their interior so corners stay open.
+    Paint_DrawRectangle(80, 90, 670, 130, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+    Paint_DrawRectangle(630, 90, 670, 270, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+    Paint_DrawRectangle(250, 230, 670, 270, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+    Paint_DrawRectangle(250, 230, 290, 405, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+    Paint_DrawRectangle(84, 94, 666, 126, WHITE, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+    Paint_DrawRectangle(634, 94, 666, 266, WHITE, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+    Paint_DrawRectangle(254, 234, 666, 266, WHITE, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+    Paint_DrawRectangle(254, 234, 286, 401, WHITE, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+    Paint_DrawString_EN(688, 146, "S2", &Font24, BLACK, WHITE);
+    Paint_DrawString_EN(688, 235, "S3", &Font24, BLACK, WHITE);
+    Paint_DrawString_EN(312, 374, "S4 / DOOR", &Font24, BLACK, WHITE);
+    // Keep even the longest age or status on one native-pixel line.
+    const int textWidth = EPD_WIDTH - 64;
+    Paint_DrawString_EN(32, 11, s.location, strlen(s.location) * Font24.Width <= textWidth ? &Font24 : &Font20, BLACK, WHITE);
+    Paint_DrawString_EN(32, 445, s.state, strlen(s.state) * Font24.Width <= textWidth ? &Font24 : &Font20, BLACK, WHITE);
     if (s.x >= 0) {
-        Paint_DrawCircle(s.x, s.y, 12, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
-        Paint_DrawCircle(s.x, s.y, 9, WHITE, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+        Paint_DrawCircle(s.x, s.y, 18, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+        Paint_DrawCircle(s.x, s.y, 13, WHITE, DRAW_FILL_FULL, DOT_PIXEL_1X1);
     }
     Paint_SelectImage(redPlane);
     Paint_Clear(WHITE);
-    Paint_DrawLine(395, 209, 570, 209, RED, LINE_STYLE_DOTTED, DOT_PIXEL_3X3);
-    Paint_DrawLine(395, 291, 570, 291, RED, LINE_STYLE_DOTTED, DOT_PIXEL_3X3);
-    Paint_DrawString_EN(407, 180, "HAZARD ZONE", &Font16, RED, WHITE);
-    Paint_DrawString_EN(436, 313, "S5", &Font16, RED, WHITE);
+    Paint_DrawString_EN(80, 56, "START / S1", &Font24, RED, WHITE);
+    Paint_DrawCircle(startX, startY, 15, RED, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+    for (int x = 395; x < 570; x += 22) {
+        Paint_DrawRectangle(x, 206, x + 14, 210, RED, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+        Paint_DrawRectangle(x, 290, x + 14, 294, RED, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+    }
+    Paint_DrawString_EN(395, 172, "HAZARD ZONE", &Font24, RED, WHITE);
+    Paint_DrawString_EN(460, 309, "S5", &Font24, RED, WHITE);
     // EPD_SetRAMValue_BaseMap accepts ink=1; Good Display GUI emits ink=0.
     for (size_t i = 0; i < planeBytes; ++i) {
-        blackPlane[i] = ~blackPlane[i];
         redPlane[i] = ~redPlane[i];
+        blackPlane[i] = static_cast<uint8_t>(~blackPlane[i] & ~redPlane[i]);
     }
 }
 
@@ -126,6 +141,18 @@ static bool hasRed(const Window &w) {
     return false;
 }
 
+// EPD_Update waits for BUSY after command 0x12. Check its result before
+// deep sleep or the next window performs another BUSY wait.
+static bool refreshCompleted(const char *operation) {
+    if (timedOut) return false;
+    if (busyLowMs > 0) {
+        ++completedRefreshes;
+        return true;
+    }
+    Serial.printf("EPD: no BUSY pulse on %s refresh; check P5 BUSY and panel model.\n", operation);
+    return false;
+}
+
 static bool drawPartial(const Window &w) {
     const int width = w.lastByte - w.firstByte + 1, height = w.bottom - w.top + 1;
     auto *pixels = static_cast<unsigned char *>(malloc(width * height));
@@ -136,41 +163,49 @@ static bool drawPartial(const Window &w) {
     // Init restores RAM from the last physically completed update before each window.
     EPD_Init_Part();
     if (!timedOut) EPD_Dis_Part(w.firstByte * 8, w.top, pixels, height, width * 8);
-    if (!timedOut) {
+    const bool completed = refreshCompleted("partial");
+    if (completed) {
         EPD_W21_WriteCMD(0x92); // partial-out, as in the vendor's clock example
         for (int y = 0; y < height; ++y)
             memcpy(PartImage + (w.top + y) * rowBytes + w.firstByte, pixels + y * width, width);
         ++partialCount;
     }
     free(pixels);
-    return !timedOut;
+    return completed;
 }
 
 static bool clearAtStartup() {
-    // GDEY075Z08 example: initialize, clear both color planes, sleep, wait 3 s.
-    Serial.println("EPD: initializing for white clear.");
-    SPI.beginTransaction(SPISettings(10000000, MSBFIRST, SPI_MODE0));
-    EPD_Init();
-    bool refreshObserved = false;
-    if (!timedOut) {
-        Serial.println("EPD: sending white frame.");
-        EPD_WhiteScreen_White();
-        refreshObserved = !timedOut && busyLowMs > 0;
-        if (!timedOut) EPD_DeepSleep();
+    // Exercise both ink states across the old image with the GDEY075Z08
+    // driver's full black and white frames. Resume at a failed frame on retry.
+    static unsigned int finishedFrames;
+    while (finishedFrames < 2) {
+        const bool black = finishedFrames == 0;
+        const char *color = black ? "black" : "white";
+        Serial.printf("EPD: initializing for %s clear.\n", color);
+        SPI.beginTransaction(SPISettings(10000000, MSBFIRST, SPI_MODE0));
+        EPD_Init();
+        bool refreshObserved = false;
+        if (!timedOut) {
+            Serial.printf("EPD: sending %s frame.\n", color);
+            if (black) EPD_WhiteScreen_Black();
+            else EPD_WhiteScreen_White();
+            refreshObserved = refreshCompleted(color);
+            if (refreshObserved)
+                Serial.printf("EPD: %s refresh BUSY wait %lu ms.\n", color, (unsigned long)busyLowMs);
+            if (!timedOut) EPD_DeepSleep();
+        }
+        SPI.endTransaction();
+        if (timedOut || !refreshObserved) return false;
+        Serial.printf("EPD: %s refresh complete.\n", color);
+        ++finishedFrames;
+        delay(3000);  // Sleep interval between full frames in the manufacturer's example.
     }
-    SPI.endTransaction();
-    if (timedOut) return false;
-    if (!refreshObserved) {
-        Serial.println("EPD: no BUSY pulse on white refresh; check P5 BUSY and panel model.");
-        return false;
-    }
-    Serial.println("EPD: white refresh complete.");
-    delay(3000);
     return true;
 }
 
-bool drawScreen(const Screen &s) {
+bool drawScreen(const Screen &s, bool forceFull) {
     timedOut = false;
+    if (forceFull) needsFull = true;
     if (!clearedAtStartup) {
         clearedAtStartup = clearAtStartup();
         if (!clearedAtStartup) return false;
@@ -197,28 +232,28 @@ bool drawScreen(const Screen &s) {
         if (partialCount + changed > 5) needsFull = true;
     }
     SPI.beginTransaction(SPISettings(10000000, MSBFIRST, SPI_MODE0));
+    bool completed = true;
     if (needsFull) {
         Serial.println("EPD: starting full refresh (GDEY075Z08).");
         EPD_Init();
         if (!timedOut) {
             Serial.println("EPD: panel initialized; sending map.");
             EPD_SetRAMValue_BaseMap(blackPlane, redPlane);
-            if (!timedOut)
+            completed = refreshCompleted("map");
+            if (completed)
                 Serial.printf("EPD: refresh command sent; BUSY wait %lu ms.\n", (unsigned long)busyLowMs);
         }
         partialCount = 0;
     } else {
         for (const Window &w : windows) {
             if (w.bottom >= 0 && !drawPartial(w)) {
-                needsFull = true;
-                if (!timedOut) EPD_DeepSleep();
-                SPI.endTransaction();
-                return false;
+                completed = false;
+                break;
             }
         }
     }
     if (!timedOut) EPD_DeepSleep();
     SPI.endTransaction();
-    needsFull = timedOut;
-    return !timedOut;
+    needsFull = timedOut || !completed;
+    return !needsFull;
 }

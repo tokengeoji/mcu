@@ -40,7 +40,7 @@ section{margin-top:26px;background:white;border:1px solid var(--line);border-rad
 
 <section id="demo"><div class="sectionhead"><div><span class="secno">03 / BEHAVIOR PREVIEW</span><h2>동작을 분리해서 확인하는 미리보기</h2></div><span class="badge proposal">설명용 모의 화면 · 실제 회로 아님</span></div><p>배치는 <b>복도 4구간의 예시</b>이며 공학4호관의 실제 평면도나 확정 모형 치수가 아니다. 위치 슬라이더, 관제 명령, S5 입력을 각각 바꿔 독립 동작을 확인할 수 있다.</p>
 <div class="demo"><div class="mapbox"><div class="maptitle"><strong>관제소 e-Ink 표시 개념</strong><span>벽·복도 검정 / 위치 흰 점 / 위험 빨강</span></div>
-<svg viewBox="0 0 800 480" role="img" aria-labelledby="mapLabel mapDesc"><title id="mapLabel">직선 복도 네 개로 이루어진 위치 표시 예시</title><desc id="mapDesc">출발점에서 세 번 직각으로 꺾어 목적지에 도달하는 경로. 위험구역은 경로 옆 빨간 경계로 표시한다.</desc>
+<svg viewBox="0 0 800 480" role="img" aria-labelledby="mapLabel mapDesc"><title id="mapLabel">직선 복도 네 개로 이루어진 위치 표시 예시</title><desc id="mapDesc">출발점에서 세 번 직각으로 꺾어 목적지에 도달하는 경로. 위험구역은 경로 옆 빨간 경계로 표시한다. 이 설계 도식의 검은 경로는 실제 부팅 화면에서 흰색 복도와 검은 외곽선으로 나타나며, START / S1 글자와 출발점은 빨간색이다.</desc>
 <rect width="800" height="480" fill="#fff"/><rect x="42" y="45" width="716" height="387" rx="5" fill="none" stroke="#1c252a" stroke-width="4"/>
 <path d="M100 110 H650 V250 H270 V385" fill="none" stroke="#1d252b" stroke-width="64" stroke-linejoin="miter"/>
 <g fill="#1d252b" font-family="sans-serif" font-size="16"><text x="80" y="73">출발</text><text x="310" y="73">복도 1</text><text x="697" y="185">복도 2</text><text x="305" y="299">복도 3</text><text x="165" y="354">복도 4</text><text x="302" y="405">목적지 · 문 1개</text></g>
@@ -164,17 +164,17 @@ S,command,alarm,door\r\n
            S1·S3 수평 / S2·S4 수직, +x 오른쪽, +y 아래쪽</code></pre><p class="small">음속 고정값은 초기 근사이며 온도·실물 보정이 필요하다. 초음파가 측정하는 것은 물체의 반사면까지 거리이므로, 점이 물체 중심을 뜻하려면 일정한 표적 형상과 방향 또는 별도의 보정이 필요하다. 화면 y축 방향도 좌표계 변환에 포함한다.</p>
 <div class="cols"><div class="card"><h3>어느 복도에 있는지</h3><p>빈 복도에서 읽는 배경 거리를 저장한다. 새 측정이 빈 복도보다 설정 여유 이상 가깝고 통로 길이 안에 있을 때 후보로 잡는다. 이전 복도·인접 복도 관계, 이동량, 측정 시각으로 후보를 선택한다.</p><p><b>5개 값 중 가장 짧은 거리를 고르는 방식은 쓰지 않는다.</b> S5는 위치 후보 선정이 아니라 별도의 위험 접근 감지에 사용한다.</p></div><div class="card"><h3>코너와 가림 구간</h3><p>90도 모서리에서는 두 센서에 보이거나 어느 센서에도 안 보일 수 있다. 모형은 물체가 센서 시선 밖으로 크게 벗어나지 않게 만들고, 중복·무검출 구간을 실제로 측정한다.</p><p>확신이 없으면 마지막 위치를 ‘현재 위치’처럼 유지하지 않고 <b>위치 미확인 / 마지막 측정 경과시간</b>을 표시한다. 신뢰성은 통로 단품 시험을 통과한 뒤 판단한다.</p></div></div>
 <h3>2. S5 위험 접근 경보</h3><p>접근 기준 <code>D_on</code>, 해제 기준 <code>D_off</code>를 구분하고 <code>D_off &gt; D_on</code>으로 둔다. 설정된 연속 횟수만큼 접근이나 이탈을 검출하면 부저를 켜거나 끈다. 거리·필터 수치는 모형에서 정하며 임의의 확정값으로 넣지 않는다.</p>
-<div class="notice red"><strong>S5가 응답하지 않으면 오류를 보고한다.</strong><p>실측 보정 전 경보 상태는 UNKNOWN이다. 보정 후 측정 오류는 FAULT이며 이미 울리던 중에는 ACTIVE_FAULT로 전송하고 부저음을 유지한다. 이 장치는 교육용 모형이다.</p></div>
+<div class="notice red"><strong>S5가 응답하지 않으면 오류를 보고한다.</strong><p>실측 보정 전 경보 상태는 UNKNOWN이다. 보정 후 측정 오류는 FAULT이며 이미 울리던 중에는 ACTIVE_FAULT를 보내고 소리를 유지한다. 꺼져 있던 경보는 유효 ECHO가 복구되면 해제 거리 이상에서 CLEAR, 연속 접근 판정 후 ACTIVE, 판정 대기 중에는 UNKNOWN으로 표시한다. 이 장치는 교육용 모형이다.</p></div>
 <h3>3. 목적지 문 하나 열기</h3><p><b>확정:</b> 도착 후 키패드 <b>숫자 0</b>을 누르면 SG90으로 문을 연다. 별도 스위치 모듈의 BT0가 아니다. 키패드는 디바운싱 후 ‘눌림 에지’ 한 번만 처리하고 길게 눌렀다고 모터 동작을 반복하지 않는다.</p>
 <div class="tablewrap"><table><thead><tr><th>항목</th><th>현재 동작</th></tr></thead><tbody><tr><td>모터</td><td>SG90 1개. 문은 별도 경첩이 지지하고 혼과 연결부가 힘을 전달한다.</td></tr><tr><td>보정</td><td>무부하 시험으로 닫힘·열림 펄스 폭을 site_profile.h에 입력한다. 미보정은 UNSET이며 PA8에는 서보 펄스를 출력하지 않는다.</td></tr><tr><td>도착과 개방</td><td>관제자가 ARRIVED를 보낸 상태에서 디바운싱된 새 숫자 0 입력을 받으면 한 번 연다. 슬라이더 위치나 자동 좌표는 개방 허가 조건에 쓰지 않는다.</td></tr><tr><td>다시 시연</td><td>문은 열린 상태를 유지한다. 보정된 상태에서 보드를 리셋하면 닫힘 목표로 시작한다. OPEN/CLOSED는 펌웨어가 명령한 목표다.</td></tr></tbody></table></div>
 </section>
 
 <section id="display"><div class="sectionhead"><div><span class="secno">09 / DISPLAY IMPLEMENTATION</span><h2>전자종이 펌웨어와 화면 갱신</h2></div><span class="badge pending">표시 속도·잔상은 실물 검증</span></div>
 <div class="cols"><div class="card"><h3>제조사 드라이버와 프로젝트 코드</h3><p><code>esp32/build.ps1</code>은 Good Display 공식 ESP32epdx의 고정 커밋에서 GDEY075Z08 전용 <code>EPD.cpp</code>·SPI·GUI를 가져온다. <code>ControlRoom.ino</code>는 UART 수신과 화면 상태를 관리하고, <code>panel.cpp</code>가 지도·빨간 표지·위치점을 그린다.</p><p class="source"><a href="#src-code">[L3: 실제 빌드에 사용한 제조사 예제]</a></p></div><div class="card"><h3>갱신 특성</h3><p>공식 GDEY075Z08 사양은 25℃에서 전체 약 <b>18초</b>, 빠른 갱신 약 <b>12초</b>, 흑백 부분 갱신 약 <b>1.5초</b>다. 현재 펌웨어는 일반 전체 갱신과 흑백 부분 갱신을 사용한다. 첫 표시 시간·잔상·적색 유지 여부는 실제 패널에서 기록한다.</p><p class="source"><a href="#src-panel">[W1]</a></p></div></div>
-<h3>화면 구성 원칙</h3><p>검은색 지도·벽, 흰색 위치점과 검은 외곽선, 빨간 위험구역 경계·표지를 유지한다. 점을 지울 때는 무조건 흰색으로 지우지 않고 <b>이전 위치 영역의 원래 지도 배경을 복원</b>한다. 변경된 바이트에서 부분 갱신 창을 계산한다. 창에 빨간 화소가 포함되면 전체 갱신한다.</p><p>빨간 화소를 자주 바꾸지 않도록 위험구역은 경계·표지로 표시하고 위치점의 갱신 영역과 겹치지 않게 한다. 다만 <b>부분 갱신에서 빨간 화소가 안정적으로 유지되는지는 실제 패널에서 확인</b>해야 한다. ‘항상 표시’는 정상 표시 화면마다 위험구역이 포함된다는 의미이며 전체 갱신 도중의 깜빡임까지 없다는 보장은 아니다.</p>
+<h3>화면 구성 원칙</h3><p>지도에 네 복도, START / S1의 빨간 시작점과 빨간 위험구역 경계·표지를 그린다. 부팅 기본값은 CONTROL ROOM / MAP LOCKED로, 지도를 한 번 그린 뒤 패널을 절전 상태에 둔다. ESP32 USB(115200 baud)에서 U를 보내면 실시간 위치를 검은 외곽선의 흰색 링으로 표시한다. H는 지도를 다시 고정하고 ?는 현재 모드·갱신 횟수를 조회한다. 시작점은 측정값이 없어도 보인다. 점을 지울 때는 무조건 흰색으로 지우지 않고 <b>이전 위치 영역의 원래 지도 배경을 복원</b>한다. 변경된 바이트에서 부분 갱신 창을 계산한다. 창에 빨간 화소가 포함되면 전체 갱신한다. 실물에서 U로 전환했을 때 상단·하단 흑백 영역 두 곳의 갱신을 3.2초 만에 확인했다(누계 3→5). H로 고정 지도를 다시 그릴 때 전체 갱신 BUSY는 10.159초였고 누계는 6이 됐다. 같은 지도를 주기적으로 반복 전송하지 않는다.</p><p>빨간 화소를 자주 바꾸지 않도록 위험구역은 경계·표지로 표시하고 위치점의 갱신 영역과 겹치지 않게 한다. 다만 <b>부분 갱신에서 빨간 화소가 안정적으로 유지되는지는 실제 패널에서 확인</b>해야 한다. ‘항상 표시’는 정상 표시 화면마다 위험구역이 포함된다는 의미이며 전체 갱신 도중의 깜빡임까지 없다는 보장은 아니다.</p>
 <h3>메모리와 화면 대기</h3><p>800×480 한 평면은 48,000바이트다. ESP32에 흑백·빨강·부분 갱신 기준 버퍼를 각각 하나씩, 합계 144,000바이트를 할당한다. 부분창 전송 임시 버퍼는 변경 영역 크기만큼 추가된다. STM32는 위치·상태 프레임만 전송한다.</p>
-<p>BUSY가 30초 동안 해제되지 않으면 갱신을 중지하고 ERROR를 보낸 뒤 전체 갱신으로 재시도한다. 화면이 구동되는 동안 UART 수신 태스크는 최신 위치와 상태를 별도로 보관한다.</p>
-<div class="notice warn"><strong>화면에는 마지막으로 완료된 갱신 결과가 보인다.</strong><p>변경 창이 누계 다섯 회를 넘게 되면 전체 갱신한다. 위치·상태 프레임 각각 약 2.5초 동안 새 수신이 없으면 미확인으로 전환한다. 마지막 유효 위치가 있으면 수신 경과시간의 하한을 10초 단위로 표시한다. 화면 자체의 갱신 시간만큼 표시가 늦어질 수 있다.</p></div>
+<p>ESP32는 첫 지도 갱신에 성공하면 READY를 보낸다. 검정·흰색·지도·부분 갱신에서 BUSY 응답이 없거나 30초 동안 해제되지 않으면 ERROR를 보낸다. 180초 후 재시도가 성공하면 다시 READY를 보낸다. 화면이 구동되는 동안 UART 수신 태스크는 최신 위치와 상태를 별도로 보관한다.</p>
+<div class="notice warn"><strong>화면에는 마지막으로 완료된 갱신 결과가 보인다.</strong><p>실시간 모드에서 변경 창이 누계 다섯 회를 넘게 되면 전체 갱신한다. 위치·상태 프레임 각각 약 2.5초 동안 새 수신이 없으면 미확인으로 전환한다. 마지막 유효 위치가 있으면 수신 경과시간의 하한을 10초 단위로 표시한다. 화면 자체의 갱신 시간만큼 표시가 늦어질 수 있다.</p></div>
 </section>
 
 <section id="verification"><div class="sectionhead"><div><span class="secno">10 / BUILD & VERIFY</span><h2>완성 순서와 통과 기준</h2></div><span class="badge proposal">단품 검증 → 통합</span></div><div class="notice"><strong>소프트웨어에서 확인한 결과</strong><p>STM32는 IAR <code>EMB_FLASH</code> 빌드와 벡터 주소 0x08003000을 확인했다. ESP32는 Arduino-ESP32 2.0.17로 빌드했다. PC에서 STM32가 생성한 정상 프레임 7개를 실제 ESP32 파서로 읽고, 화면 코드로 이전 점 복원·빨강 보존·BUSY 타임아웃 복구를 검증했다. 아래 절차는 실제 보드와 모형에서 진행한다.</p></div>
@@ -206,7 +206,7 @@ esp32/
 <div class="tablewrap"><table><thead><tr><th>확정</th><th>아직 확인·결정 필요</th></tr></thead><tbody>
 <tr><td>STM32F103RBT6 실습 키트, ESP32-L, DESPI-C02</td><td>패널 GDEY075Z08 모델명, FPC 방향, 실물 전압·전류</td></tr>
 <tr><td>복도 4개, 복도 초음파 4개 + 위험 센서 1개</td><td>복도 길이·폭·배경 거리, 센서 높이·방향, 코너 중복/미검출 구간</td></tr>
-<tr><td>흰색 위치점·검은 지도·빨간 위험 경계/표지</td><td>부분 갱신 잔상·빨간색 유지, 허용되는 화면 지연과 전체 갱신 운용</td></tr>
+<tr><td>흰색 위치 링·검은 지도·빨간 시작점 및 위험 경계/표지</td><td>부분 갱신 잔상·빨간색 유지, 허용되는 화면 지연과 전체 갱신 운용</td></tr>
 <tr><td>SAFE/CAUTION/DANGER/ARRIVED, LED 500ms 점멸, S5 독립 경보</td><td>S5 접근·해제 거리와 유효 측정 연속 횟수</td></tr>
 <tr><td>ARRIVED 후 키패드 숫자 0으로 한 번 개방, 리셋 때 닫힘 목표</td><td>서보 무부하 허용 펄스 폭·기구 연결·부하 전류</td></tr>
 <tr><td>점퍼 케이블 보유, 브레드보드 1개, 별도 어댑터 구매 제외</td><td>기존 키트의 전원 출력 위치와 여유 전류. 부족할 때의 전원 보완 방법</td></tr>

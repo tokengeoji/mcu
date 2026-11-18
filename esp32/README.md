@@ -24,7 +24,7 @@ ESP32-L 위쪽 USB-C와 PC의 USB 포트를 **데이터 케이블**로 연결하
 1. 현재 실습 PC의 **Arduino IDE 2.3.11**에서 **File → Open**을 누르고 `C:\mcu\project\esp32\ArduinoIDE\ControlRoom\ControlRoom.ino`를 연다. 이 폴더에는 GDEY075Z08 드라이버와 Good Display 공식 라이브러리가 함께 들어 있다. 새 PC는 아래 준비 절차를 먼저 진행한다.
 2. **Tools → Board → esp32 → ESP32 Dev Module**을 선택한다. **Tools → Port**에서는 ESP32-L을 USB로 연결할 때 새로 나타난 포트를 선택한다. 이 PC의 장치 관리자 표기는 **USB-SERIAL CH340 (COM4)**다. 해당 포트를 쓰는 다른 터미널은 닫는다.
 3. 왼쪽 위 **Verify(✓)**를 눌러 컴파일 성공을 확인하고 **Upload(→)**를 누른다. 아래 Output 창에 플래시 검사 결과 `Hash of data verified.`와 재시작 메시지가 나타난다. [Arduino IDE 업로드 안내](https://support.arduino.cc/hc/en-us/articles/4733418441116-Upload-a-sketch-in-Arduino-IDE)
-4. **Tools → Serial Monitor**를 열고 속도를 **115200 baud**로 설정한다. ESP32-L의 빨간 RESET을 한 번 눌러 `EPD: initializing for white clear.`부터 읽는다. STM32의 센서 명령 `RAW`는 키트 UART의 별도 포트에서 9600 baud로 보낸다.
+4. **Tools → Serial Monitor**를 열고 속도를 **115200 baud**로 설정한다. ESP32-L의 빨간 RESET을 한 번 눌러 `EPD: initializing for black clear.`부터 읽는다. STM32의 센서 명령 `RAW`는 키트 UART의 별도 포트에서 9600 baud로 보낸다.
 
 ### 다른 Windows PC에서 처음 한 번 준비하기
 
@@ -67,17 +67,20 @@ arduino-cli core install esp32:esp32@2.0.17 --additional-urls $index
 
 ## 버스 도착정보가 남거나 지도가 뜨지 않을 때
 
-조립 후 촬영한 패널에는 예전에 표시한 **버스 도착정보**가 남아 있었다. 전자종이는 전원이 끊겨도 마지막 그림을 유지한다. 이 펌웨어는 부팅 후 패널을 초기화해 전체를 흰색으로 한 번 갱신하고, 패널을 절전 상태로 둔다. 3초 후 다시 초기화해 관제 지도를 그린다. [Good Display 패널 특성](https://www.good-display.com/product/394.html)
+조립 후 촬영한 패널에는 예전에 표시한 **버스 도착정보**가 남아 있었다. 전자종이는 전원이 끊겨도 마지막 그림을 유지한다. 부팅하면 패널 전체를 검정, 흰색, 관제 지도 순으로 갱신한다. 검정과 흰색을 각각 표시한 뒤 패널을 절전 상태로 두고 3초 기다린다. 각 단계는 패널의 BUSY 응답을 확인한 뒤 다음 단계로 넘어간다. [Good Display 패널 특성](https://www.good-display.com/product/394.html)
 
-1. 업로드를 마친 뒤 ESP32-L USB 포트(COM4)를 직렬 터미널에서 **115200 baud, 8N1**로 연다. 시작 로그를 보려면 ESP32-L의 빨간 RESET 버튼을 누른다. 이 장비에서는 `UART: first valid STM32 position frame.`과 `UART: first valid STM32 status frame.`을 모두 수신했다. 이전 시험에서는 초기화 중 BUSY(GPIO13)가 30초간 LOW였다. 새 펌웨어 시험에서는 흰 화면 명령을 전송했지만 갱신을 확인할 BUSY 펄스가 없었다. 흰색 지우기 완료와 지도 전송은 아직 확인되지 않았다. 이번 USB 로그는 `EPD: sending white frame.` 다음에 `EPD: no BUSY pulse on white refresh; check P5 BUSY and panel model.`을 출력했다.
+1. 업로드를 마친 뒤 ESP32-L USB 포트(COM4)를 직렬 터미널에서 **115200 baud, 8N1**로 연다. 시작 로그를 보려면 ESP32-L의 빨간 RESET 버튼을 누른다. 교체 전 보드는 STM32 위치·상태 프레임을 받았지만 흰색 갱신의 BUSY 응답이 없었다. 교체 보드의 직전 펌웨어에서는 첫 지도가 선명했다가 아래부터 흐려지는 현상을 사용자가 확인했다. 기본 지도를 고정한 최신 펌웨어에서는 검정 10,158 ms, 흰색 10,159 ms, 지도 10,160 ms의 BUSY 응답을 확인했다. 직후와 90.1초 뒤에 조회한 완료 횟수는 모두 3회였다. 고정 후의 광학적 선명도는 실제 화면에서 확인한다. 실물에서 U로 전환했을 때 상단·하단 흑백 영역 두 곳의 갱신을 3.2초 만에 확인했다(누계 3→5). H로 고정 지도를 다시 그릴 때 전체 갱신 BUSY는 10.159초였고 누계는 6이 됐다. 같은 지도를 주기적으로 반복 전송하지 않는다.
 2. **큰 ESP32-L의 P3 전원 점퍼를 먼저 확인한다.** 두 보드 전원을 끄고 USB 케이블도 분리한다. 큰 ESP32-L에서 검은 P5 바로 왼쪽, A4·A5 인쇄 옆의 노란 받침 위 금속 핀 두 개가 P3 전원 점퍼다. 사진에는 두 핀이 노출돼 있다. 실물에도 캡이 없으면 해당 두 핀을 함께 덮는 2핀 쇼트캡을 끼운다. 패널 모델에 맞는 RESE 설정을 확인한 뒤 USB 전원을 다시 연결해 화면을 시험한다. 회로도에서 패널 전원은 3.3 V → P3 → R1(0 Ω) → 3.3V_S2 → P5 1번으로 이어진다. [조립 사진](../docs/처음부터_따라하기.html#p1) · [제조사 회로도](https://www.good-display.com/companyfile/909.html) · [Good Display FAQ 1번](https://www.good-display.com/news/79.html)
 3. 화면이 그대로이면 다시 두 보드의 전원을 끄고 USB를 뺀다. ESP32-L 하단의 검은 P5 8구에 DESPI-C02의 P2 8핀을 모두 꽂는다. 한쪽 끝의 3.3V ↔ 3.3V와 반대쪽 끝의 BUSY ↔ BUSY를 함께 맞춘다. DESPI-C02의 흰색 P1에 패널 리본을 반듯하게 끝까지 넣고 잠금쇠를 닫는다. [결선도](../docs/하드웨어_연결.md#esp32-l-p5와-despi-c02-p2)
 4. 패널 후면 라벨이나 지급 명세에서 GDEY075Z08을 확인한다. 리본 인쇄 FPC-C001만으로는 패널 모델을 특정할 수 없다. GDEY075Z08이면 작은 DESPI-C02의 P3 은색 RESE 스위치를 0.47 Ω로 맞추고 PC USB를 다시 연결해 스위치를 ON에 둔다. 다른 모델이면 해당 모델용 Good Display 드라이버와 RESE 값을 먼저 확인한다.
-5. GDEY075Z08이 정상 응답하면 기존 버스 정보 → 흰 화면 → START / S1과 빨간 HAZARD ZONE이 있는 지도의 순서로 바뀐다. STM32 없이도 이 과정을 시험할 수 있다. STM32가 연결되지 않았을 때 상태란은 STM32 STATUS UNAVAILABLE다. 전원을 다시 켰을 때 USB 로그가 `EPD: panel initialized; sending map.`까지 진행하는지 확인한다. `BUSY LOW for 30 s`가 반복되면 P5·P2 접점, P1 잠금 및 패널 모델을 다시 확인한다.
+5. GDEY075Z08이 정상 응답하면 검정 → 흰색 → START / S1의 빨간 점과 HAZARD ZONE이 있는 지도의 순서로 바뀐다. STM32 없이도 이 과정을 시험할 수 있다. 기본 화면 상단은 `CONTROL ROOM`, 하단은 `MAP LOCKED`다. STM32 수신은 고정 중에도 계속된다. 전원을 다시 켰을 때 USB 로그의 `sending map` 다음에 `EPD: refresh command sent; BUSY wait … ms.`가 나오는지 확인한다. 마지막으로 화면에서도 지도를 확인한다. `BUSY LOW for 30 s`가 반복되면 P5·P2 접점, P1 잠금 및 패널 모델을 다시 확인한다.
 
-정상 순서는 아래와 같다. 세 번째 줄은 흰색 갱신 후 패널 절전 단계까지 끝났을 때 출력된다. 네 번째 줄은 3초 뒤 지도용 초기화를 시작할 때 출력된다. 흰색 지우기가 완료되면 다음 전원 켜기나 RESET까지 반복하지 않는다. BUSY 오류가 발생하면 다음 자동 시도는 180초 뒤다. 전원을 끄고 결선을 바로잡은 뒤 다시 켜면 부팅 시점에 다시 시도한다.
+직렬 모니터에서 아래 메시지를 순서대로 찾는다. `black refresh complete`와 `white refresh complete`가 각각 나와야 검정·흰색 지우기가 완료된 것이다. 보드를 다시 켜거나 RESET을 누르면 검정부터 다시 시작한다. BUSY 오류가 발생하면 다음 자동 시도는 180초 뒤다. 전원을 끄고 결선을 바로잡은 뒤 다시 켜면 부팅 시점에 다시 시도한다.
 
 ```text
+EPD: initializing for black clear.
+EPD: sending black frame.
+EPD: black refresh complete.
 EPD: initializing for white clear.
 EPD: sending white frame.
 EPD: white refresh complete.
@@ -87,9 +90,9 @@ EPD: panel initialized; sending map.
 
 ## 화면과 좌표
 
-화면은 첨부 계획서의 네 복도와 빨간 위험 표지를 사용한다. STM32의 `stm32/site_profile.h`를 빌드할 때 함께 가져오므로 모형 실측값 변경 시 두 보드를 모두 다시 빌드한다. S1·S3은 수평, S2·S4는 수직이다. 양의 x는 오른쪽, 양의 y는 아래쪽이다. 각 복도의 양 끝에 실측 범위를 대응시킨 모식도이며 실제 건물 축척을 뜻하지 않는다. 설정된 축·길이와 맞지 않는 좌표에는 `CHECK MAP`과 수신한 mm 좌표를 표시한다. 위치 미확인 또는 UART 단절 시 점을 지우고, 이전에 유효한 위치를 받았으면 마지막 수신 후 경과시간의 하한을 10초 단위로 표시한다.
+ESP32 USB 직렬 모니터(115200 baud)에 `U`(실시간), `H`(지도 고정), `?`(모드·완료된 갱신 횟수 조회) 중 하나를 보낸다. `u`·`h`도 같다. 부팅 시 기본값은 고정이다. `U`는 최신 수신 위치·상태를 표시하고 `H`는 검정·흰색 지우기를 반복하지 않고 지도 전체를 한 번 그린 뒤 패널을 절전 상태에 둔다. 이미 고정된 화면에 `H`나 `?`를 보내면 화면을 다시 그리지 않는다. 800×480 지도에서 `START / S1` 글자와 시작점은 빨갛고 복도 안쪽은 흰색이다. STM32에 연결하기 전에도 보인다. 실시간 모드에서 STM32가 유효한 위치를 보내면 해당 복도에 검은 테두리의 링을 그린다. 구간 이름과 위험 표지는 24픽셀 글꼴이고, 긴 상태 문장은 20픽셀로 맞춘다. STM32의 `stm32/site_profile.h`를 빌드할 때 함께 가져오므로 모형 실측값 변경 시 두 보드를 모두 다시 빌드한다. S1·S3은 수평, S2·S4는 수직이다. 양의 x는 오른쪽, 양의 y는 아래쪽이다. 각 복도의 양 끝에 실측 범위를 대응시킨 모식도이며 실제 건물 축척을 뜻하지 않는다. 설정된 축·길이와 맞지 않는 좌표에는 `CHECK MAP`과 수신한 mm 좌표를 표시한다. 위치 미확인 또는 UART 단절 시 측정 위치 링을 지우고, 이전에 유효한 위치를 받았으면 마지막 수신 후 경과시간의 하한을 10초 단위로 표시한다.
 
-수신 태스크가 위치와 상태의 최신값을 덮어 써서 화면 갱신 동안 프레임이 쌓이지 않는다. 연속 약 2.5초 동안 해당 종류의 프레임을 받지 못하면 해당 표시를 미확인으로 바꾼다. 기존 그림이 바뀌려면 패널 갱신 시간이 추가로 필요하다. USB에는 오류 원인을 출력하고 STM32에는 `READY` 또는 `ERROR` 줄을 보낸다.
+수신 태스크가 위치와 상태의 최신값을 덮어 써서 화면 갱신 동안 프레임이 쌓이지 않는다. 실시간 모드에서 약 2.5초 동안 해당 종류의 프레임을 받지 못하면 해당 표시를 미확인으로 바꾼다. 기존 그림이 바뀌려면 패널 갱신 시간이 추가로 필요하다. 패널이 첫 지도 갱신에 응답하면 ESP32가 STM32로 `READY`를 한 번 보낸다. 검정·흰색·지도·부분 갱신에서 BUSY 응답이 없거나 30초 동안 해제되지 않으면 `ERROR`를 보낸다. STM32는 이를 키트 UART에 `ERR DISPLAY`로 알린다. 180초 후 재시도가 성공하면 ESP32가 다시 `READY`를 보내고 STM32가 상태 한 줄을 즉시 전송한다.
 
 ## 제조사 예제 적용 내역
 

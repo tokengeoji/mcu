@@ -55,7 +55,7 @@ static void hazard_reading(int mm)
         } else successive = 0;
         if (alarm_on) alarm = ACTIVE;
         else if (mm >= SITE_HAZARD_OFF_MM || before == CLEAR || before == ACTIVE) alarm = CLEAR;
-        else if (before != FAULT) alarm = UNKNOWN;
+        else alarm = UNKNOWN; /* Valid echo, but no confirmed proximity state yet. */
     }
     if (before != alarm) status_dirty = 1;
 }

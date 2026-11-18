@@ -8,5 +8,6 @@ struct Screen {
 };
 
 bool startPanel();
-bool drawScreen(const Screen &screen);
+uint32_t panelRefreshCount();
+bool drawScreen(const Screen &screen, bool forceFull = false);
 bool locate(const Position &position, int &x, int &y);
