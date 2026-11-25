@@ -1,6 +1,6 @@
 # 2조 위험구역 작업자 추적 관제실
 
-한 개의 모형 작업자가 네 구간의 복도를 이동한다. STM32가 초음파를 측정하고 현장 장치를 제어한다. ESP32-L은 부팅 시 정상 3색 전체 갱신으로 지도를 한 번 그리고 고정한다(HOLD). ESP32 USB에 `U`를 보내면 STM32의 실시간 좌표·상태를 표시한다. `H`는 고정 지도 다시 표시, `A`는 180초 간격 자동 재표시, `?`는 모드·완료 횟수 조회다. PC에서 보낸 관제 명령은 LED를 바꾸고, 위험지점의 다섯 번째 센서는 독립적으로 부저를 제어한다. 키패드 `1`~`5`를 누르고 있으면 선택한 센서의 응답도 소리로 확인할 수 있다.
+한 개의 모형 작업자가 네 구간의 복도를 이동한다. STM32가 초음파를 측정하고 현장 장치를 제어한다. ESP32-L은 흰 바탕에 검은 관제 지도를 그린다. 기본 HOLD는 표시를 마치면 패널을 절전시키고 완료 여부를 저장한다. 다음 부팅은 기존 지도를 그대로 유지한다. ESP32 USB에 `U`를 보내면 STM32의 실시간 좌표·상태를 표시한다. `H`는 고정 지도 다시 표시, `A`는 180초 간격 자동 재표시, `?`는 모드·완료 횟수 조회다. PC에서 보낸 관제 명령은 LED를 바꾸고, 위험지점의 다섯 번째 센서는 독립적으로 부저를 제어한다. 키패드 `1`~`5`를 누르고 있으면 선택한 센서의 응답도 소리로 확인할 수 있다.
 
 처음 조립할 때는 프로젝트 압축을 모두 풀고 [처음부터 따라 하기](docs/처음부터_따라하기.html)를 브라우저로 연다. 브레드보드 구멍과 모듈 단자 위치, 빌드와 다운로드 순서, 터미널에서 확인할 응답을 그림과 함께 볼 수 있다.
 
@@ -8,11 +8,11 @@
 
 **최종 제작도 v6:** [55×40 cm 외벽 밀착·중앙 폐쇄 3D 조립도, 평면도, 재단도](docs/foam-v6.md) · [TODO 및 실물 검증 순서](TODO.md).
 
-**ESP32·e-Ink 버전 기준:** [실물 식별·고정 라이브러리·빌드 및 검증 기록](docs/esp32-eink-versions.md).
+**전자종이 확정본**은 사용자가 실물에서 깨끗하고 선명한 표시를 확인한 7.5인치 흑백 버전이다. [화면·실물 로그](docs/epaper-monochrome-fix.md) · [부품·라이브러리·빌드 버전](docs/esp32-eink-versions.md)
 
 ## 빌드와 초기 설정
 
-다른 Windows PC에서는 프로젝트 전체를 새 폴더에 내려받아 압축을 푼 뒤 `stm32/Getting_start.eww`를 연다. 저장소의 `.gitattributes`가 STM32의 C·헤더·어셈블리·IAR 설정 파일을 Windows 개행(CRLF)으로 지정한다. 이전 소스 ZIP을 풀어 사용하던 경우 새 폴더에서 시작하고, 보정한 `site_profile.h` 값이 있으면 옮긴다. STM32는 수업용 IAR EWARM, ESP32는 Arduino IDE 2와 Espressif의 esp32 보드 패키지 2.0.17을 사용한다. [IAR 편집기 개행 설정](https://docs.iar.com/ewarm/10.1x/en/ide-project-management-and-building/the-development-environment/reference-information-on-the-ide/editor-options.html) · [Git 개행 설정](https://git-scm.com/docs/gitattributes#_eol)
+다른 Windows PC에서는 프로젝트 전체를 새 폴더에 내려받아 압축을 푼 뒤 `stm32/Getting_start.eww`를 연다. 저장소의 `.gitattributes`가 STM32의 C·헤더·어셈블리·IAR 설정 파일을 Windows 개행(CRLF)으로 지정한다. 이전 소스 ZIP을 풀어 사용하던 경우 새 폴더에서 시작하고, 보정한 `site_profile.h` 값이 있으면 옮긴다. STM32는 수업용 IAR EWARM, ESP32는 Arduino IDE 2와 Espressif의 esp32 보드 패키지 3.3.12을 사용한다. [IAR 편집기 개행 설정](https://docs.iar.com/ewarm/10.1x/en/ide-project-management-and-building/the-development-environment/reference-information-on-the-ide/editor-options.html) · [Git 개행 설정](https://git-scm.com/docs/gitattributes#_eol)
 
 | 대상 | 프로젝트 | 시작 방법 |
 | --- | --- | --- |
@@ -21,7 +21,7 @@
 
 STM32는 실습 예제에 동봉된 **STM32F10x Firmware Library V1.0**을 사용한다. 시작 코드, 클록, 인터럽트 벡터, 링커는 키트의 DFU 부트로더 영역을 보존한다. 새 HEX 파일은 `stm32/EMB_FLASH/Exe/Getting_start.hex`에 생성된다. 수업에서 사용하는 DFU File Manager로 HEX를 DFU로 변환하고, 보드를 PROG 모드에 넣은 뒤 DfuSe Demo에서 애플리케이션을 내려받을 수 있다.
 
-**센서 시험용 STM32 펌웨어**는 이 PC의 `C:\mcu\ControlRoom_STM32_초음파피에조.dfu` 또는 [GitHub 릴리스](https://github.com/tokengeoji/mcu/releases/tag/piezo-check-v1)에서 찾을 수 있다. DfuSe Demo의 **Choose → Upgrade**로 이 DFU를 쓰고, 완료 후 PROG에서 손을 뗀 상태로 RESET을 누른다. ESP32-L은 USB-C 데이터 케이블로 PC에 연결하고 스위치를 ON으로 옮긴다. 이 PC에서 확인한 ESP32 업로드 포트는 CH340(COM4)다. 프로젝트의 `esp32` 폴더에서 `.\build.ps1 -PrepareIde`를 실행하고, 마지막 줄에 표시된 `ControlRoom.ino`를 Arduino IDE에서 연다. [IDE 설정·스케치 준비·업로드](esp32/README.md#빌드와-전송)
+**센서 시험용 STM32 펌웨어**는 이 PC의 `C:\mcu\ControlRoom_STM32_초음파피에조.dfu` 또는 [GitHub 릴리스](https://github.com/tokengeoji/mcu/releases/tag/piezo-check-v1)에서 찾을 수 있다. DfuSe Demo의 **Choose → Upgrade**로 이 DFU를 쓰고, 완료 후 PROG에서 손을 뗀 상태로 RESET을 누른다. ESP32-L은 USB-C 데이터 케이블로 PC에 연결하고 스위치를 ON으로 옮긴다. 흑백본의 실물 시험 기록은 CH340(COM10)이며 현재 PC에서 새로 나타나는 포트를 선택한다. 프로젝트의 `esp32` 폴더에서 `.\build.ps1 -PrepareIde`를 실행하고, 마지막 줄에 표시된 `ControlRoom.ino`를 Arduino IDE에서 연다. [IDE 설정·스케치 준비·업로드](esp32/README.md#빌드와-전송)
 
 **센서 1개를 먼저 시험한다.** 키트의 PA6을 PIEZO 입력에 잇고 S1 정면 20~40 cm에 평평한 표적을 둔다. 키패드 `1`을 2초간 누르면 새 ECHO마다 짧게 울린다. 같은 방법으로 `2`~`5`를 각각 S2~S5에서 시험한다. ESP32를 연결하기 전에도 시험할 수 있다. 소리가 없으면 키트 UART 포트를 9600 baud로 열고 `RAW`와 Enter를 보내 해당 열을 확인한다. 모형 치수와 경보 거리, 서보 끝점은 실측 후 [보정 설정](stm32/site_profile.h)에 넣는다. 초기 설정으로도 명령·LED·원시 거리 전송을 시험할 수 있다. 보정 전 위치는 미확인, 경보는 `UNKNOWN`, 문은 `UNSET`이며 서보 펄스를 출력하지 않는다.
 
@@ -29,7 +29,7 @@ STM32는 실습 예제에 동봉된 **STM32F10x Firmware Library V1.0**을 사�
 
 보드의 핀 인쇄를 기준으로 연결한다. 두 제어 보드는 GND를 공유한다. STM32·ESP32 사이의 신호는 3.3 V TTL이며 보드별 전원 출력은 따로 둔다.
 
-전자종이는 전원이 꺼져도 마지막 그림을 유지한다. ESP32만 켜도 첫 화면에 `CONTROL ROOM / MAP LOCKED`와 검은 `START / S1` 글자, 검은 테두리 안의 빨간 출발점이 보인다. 하단이 흐려질 때는 USB 직렬 모니터(115200 baud)에서 `?`를 보내고 같은 조명에서 갱신 직후와 90초 후의 화면 및 완료 횟수를 비교한다. 수동 재표시도 시험하려면 첫 갱신 완료 후 180초 이상 지난 뒤 `H`를 한 번 보내고, 지도를 다시 그린 뒤 `?`로 횟수가 1에서 2로 늘었는지 확인한다. [실물 배선 사진과 화면 진단](docs/처음부터_따라하기.html#blank-display) · [화면 유지 시험](esp32/README.md#화면이-점차-흐려질-때)
+ESP32 단독으로 고정 지도를 확인할 수 있다. 왼쪽 `START / S1` 옆에는 검은 테두리와 검은 중심을 가진 출발점, 위험구역에는 검은 점선이 보인다. ESP32 USB에서 115200 baud로 `?`를 보내면 이 부팅의 완료 횟수와 유지 기록(`retained`)이 나온다. 첫 표시 뒤에는 `1`과 `retained=1`, 저장된 지도를 유지한 재부팅 뒤에는 `0`과 `retained=1`이 정상이다. 패널을 교체했거나 기존 그림을 덮어쓰려면 `H`를 보낸다. [배선 사진과 화면 진단](docs/처음부터_따라하기.html#blank-display) · [실물 검증 로그](docs/epaper-monochrome-fix.md)
 
 ESP32-L은 부품 면의 USB-C 단자를 위로 둔다. STM32 점퍼 3개는 모두 오른쪽 빨간 버튼 아래의 노란 **커넥터 P6**에 꽂는다. 위에서 첫째가 `SCL`, 둘째가 `SDA`, 셋째가 `3V3`(비움), 넷째가 `GND`다. 왼쪽의 노란 8구 **커넥터 P9**는 이번 UART 연결에서 비워 둔다. [실물 사진으로 위치 찾기](docs/esp32-connectors.png)
 
@@ -48,7 +48,7 @@ ESP32-L은 부품 면의 USB-C 단자를 위로 둔다. STM32 점퍼 3개는 모
 
 센서 전원과 ECHO의 실제 HIGH 전압은 연결 전에 확인한다. 특히 PA0…PA3은 STM32F103RB 데이터시트에서 5 V 허용 핀으로 지정되지 않는다. 5 V ECHO가 나오는 모듈은 레벨을 변환한 뒤 연결한다. [ST 데이터시트의 핀 정의](https://www.st.com/resource/en/datasheet/stm32f103rb.pdf)
 
-사진에서 기판 **GooDisplay ESP32-L**, 어댑터 **DESPI-C02**, 리본 **FPC-C001**을 판독했다. 어댑터 P2와 기판 P5는 `3.3V / GND / SDI / SCK / CS / D/C / RES / BUSY` 표기를 맞춰 결합한다. 이 프로젝트의 패널 대상은 제공된 계획서의 **GDEY075Z08**(800×480, 흑·백·적)이다. 사진에는 패널 제품 라벨이 보이지 않으므로 최초 구동 전에 후면 라벨이나 지급 명세를 대조한다. 해당 모델의 DESPI-C02 RESE 선택값은 **0.47 Ω**이다. [ESP32-L 회로도](https://www.good-display.com/companyfile/909.html) · [GDEY075Z08 제품 사양](https://www.good-display.com/product/394.html) · [제조사 RESE 선택표 §4.3](https://v4.cecdn.yun300.cn/100001_1909185148/Evaluation%20Kit%20for%20E-Paper%20Display%20DEArduino-L%28C02%29.pdf)
+실물 구성은 **GooDisplay ESP32-L · DESPI-C02 · Seeed SKU 104990861**이다. 지급품의 상자 SKU와 제조사 자료로 확인한 패널은 **T075A04**(UC8179, 800×480 흑백)다. 어댑터 P2와 기판 P5는 `3.3V / GND / SDI / SCK / CS / D/C / RES / BUSY` 표기를 맞춰 결합한다. 작은 DESPI-C02의 P3 RESE는 **0.47 Ω**다. [ESP32-L 회로도](https://www.good-display.com/companyfile/909.html) · [Seeed 제품 사양](https://www.seeedstudio.com/7-5-Monochrome-ePaper-Display-with-800x480-Pixels-p-5788.html) · [패널 데이터시트](https://files.seeedstudio.com/wiki/Other_Display/750-epaper/7.5_inch_Monochrome_ePaper_Display_Datasheet.pdf)
 
 ## 관제 명령과 데이터
 
@@ -72,10 +72,10 @@ PC는 **9600 baud, 8N1, 흐름 제어 없음**으로 연결한다. 명령은 대
 2. 각 구간의 센서 원점(mm), 방향 단위벡터, 유효 길이, 거리 보정, 배경 거리와 판별 여유를 입력한다. 복도 두 곳에 동시에 후보가 생기거나 위치가 끊길 때 미확인으로 표시되는지 본다.
 3. 위험지점에서 접근·해제 거리를 각각 측정하고 해제 거리를 더 크게 설정한다. 감지 연속 횟수를 정한 뒤 접근, 이탈, ECHO 분리를 각각 시험한다.
 4. 서보에 문을 연결하기 전에 허용되는 닫힘·열림 펄스 폭을 확인한다. 값을 반영해 다시 빌드한 뒤 `ARRIVED`와 새 키패드 0 입력으로 모형 문이 한 번 열리는지 확인한다.
-5. ESP32 USB에서 `U`로 실시간 모드를 선택하고 전자종이 전체 갱신 중 네 관제 명령과 S5 감지를 시험한다. 흰 점의 이전 자리, 빨간 위험 표지, 통신 단절 시 위치 표시를 실물에서 확인한다.
+5. ESP32 USB에서 `U`로 실시간 모드를 선택하고 전자종이 전체 갱신 중 네 관제 명령과 S5 감지를 시험한다. 검은 위치 링의 이전 자리, 위험구역 점선, 통신 단절 시 위치 표시를 실물에서 확인한다.
 
 ## 구현 근거
 
 - **실습 환경과 SPL** — `C:\mcu`의 IAR 프로젝트, `System_func.*`, `stm32f10x_vector.c`, `STM32F10x_FLASH.icf`, ST 배포 헤더·소스를 기준으로 삼았다. 라이브러리 호출은 트리에 포함한 버전으로 컴파일한다. 타이머 입력 캡처와 USART 동작은 제조사 레퍼런스에 따른다. [ST RM0008](https://www.st.com/resource/en/reference_manual/cd00171190.pdf)
 - **장치별 동작** — 제공된 GPIO 입력·출력, PIEZO, 인터럽트, UART 및 모터 실습과 `2조_위험구역_관제실_흐름_배선계획.html`의 배선·추적·관제 절을 사용했다. 5개 센서의 순차 측정, 모형 좌표 추정, 관제 명령과 화면 처리는 이 과제를 위한 통합 코드다.
-- **전자종이** — Good Display가 ESP32-S 모듈과 ESP32-L/DESPI-C02 조합을 명시한다. 패널 명령과 갱신은 해당 패널의 제조사 예제를 기반으로 한다. [ESP32-L 개발 키트](https://kr.good-display.com/news/193.html) · [Good Display ESP32 예제](https://github.com/gooddisplayshare/ESP32epdx/tree/d5ed3b777bedb9b407ccff09dc810a9248eb7926/examples/3-Colors%20(BWR)/7.5/GDEY075Z08)
+- **전자종이** — Good Display의 ESP32-L·DESPI-C02와 GDEY075T7 흑백 예제를 기반으로 Seeed T075A04 패널을 구동한다. [ESP32-L 개발 키트](https://kr.good-display.com/news/193.html) · [Good Display ESP32 흑백 예제](https://github.com/gooddisplayshare/ESP32epdx/tree/d5ed3b777bedb9b407ccff09dc810a9248eb7926/examples/2-Colors%20%28BW%29/7.5/GDEY075T7)

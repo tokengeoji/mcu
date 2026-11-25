@@ -70,8 +70,8 @@
 <path d="M1022 527 H1366" fill="none" stroke="#BFCFD3" stroke-width="1" />
 <path d="M1051 540 V586" fill="none" stroke="#006E67" stroke-width="2.5" marker-end="url(#aArrow)"/>
 <text x="1074" y="573" fill="#425866" font-size="18" font-weight="400" text-anchor="start">P1 → 패널 FPC</text>
-<text x="1021" y="631" fill="#182D36" font-size="25" font-weight="700" text-anchor="start">GDEY075Z08</text>
-<text x="1021" y="669" fill="#425866" font-size="18" font-weight="400" text-anchor="start">800 × 480 · 흑백적 3색 대상</text>
+<text x="1021" y="631" fill="#182D36" font-size="25" font-weight="700" text-anchor="start">T075A04</text>
+<text x="1021" y="669" fill="#425866" font-size="18" font-weight="400" text-anchor="start">800 × 480 · 흑백 / UC8179</text>
 <rect x="48" y="724" width="1344" height="103" rx="12" fill="#EAF0F1" stroke="none" stroke-width="1.5"/>
 <text x="71" y="760" fill="#182D36" font-size="20" font-weight="700" text-anchor="start">전원과 접지</text>
 <text x="245" y="760" fill="#182D36" font-size="19" font-weight="400" text-anchor="start">보드 간 UART는 3.3V TTL이며 GND를 공유한다. 각 보드의 양극 전원 출력은 분리한다.</text>

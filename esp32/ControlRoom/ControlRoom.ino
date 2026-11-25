@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include <Preferences.h>
+#include <esp_system.h>
 #include <esp_timer.h>
 #include <inttypes.h>
 #include "protocol.h"
@@ -12,7 +14,11 @@ struct Feed {
 };
 
 static QueueHandle_t newest;
-static bool panelAvailable;
+static bool panelAvailable, panelStarted;
+static Preferences panelPreferences;
+static bool panelPreferencesAvailable, retainedHoldMap;
+// Change the key when the default map artwork changes.
+static constexpr char holdMapKey[] = "hold-mono-v1";
 enum class DisplayMode { Auto, Hold, Live };
 static DisplayMode mode = DisplayMode::Hold;
 static bool redrawHold;
@@ -61,7 +67,18 @@ static void readLink(void *) {
     }
 }
 
+static bool invalidateRetainedMap() {
+    if (!retainedHoldMap) return true;
+    if (!panelPreferences.putBool(holdMapKey, false)) {
+        Serial.println("EPD: could not clear retained map marker; redraw canceled.");
+        return false;
+    }
+    retainedHoldMap = false;
+    return true;
+}
+
 static void updateDisplay() {
+    if (mode == DisplayMode::Hold && retainedHoldMap) return;
     static Screen previous;
     static bool displayed;
     static int64_t nextFullAt, retryAfter;
@@ -100,6 +117,15 @@ static void updateDisplay() {
         strcpy(screen.state, "STM32 STATUS UNAVAILABLE");
     }
     if (displayed && !automatic && !redrawHold && !memcmp(&screen, &previous, sizeof(screen))) return;
+    if (!panelStarted) {
+        panelStarted = startPanel();
+        if (!panelStarted) {
+            panelAvailable = false;
+            Serial.println("Display buffer allocation failed.");
+            Serial2.print("ERROR\r\n");
+            return;
+        }
+    }
     const PanelUpdate result = drawScreen(screen, fixed, fullAllowed);
     if (result == PanelUpdate::NeedsFull) {
         retryAfter = nextFullAt;
@@ -117,7 +143,13 @@ static void updateDisplay() {
     displayed = true;
     redrawHold = false;
     if (automatic) Serial.println("EPD: map auto; panel asleep. Next refresh in 180 s. USB A=auto, H=hold, U=live.");
-    if (mode == DisplayMode::Hold) Serial.println("EPD: map locked; panel asleep. USB H=redraw after cooldown, A=auto, U=live.");
+    if (mode == DisplayMode::Hold) {
+        if (panelPreferencesAvailable) {
+            retainedHoldMap = panelPreferences.putBool(holdMapKey, true) != 0;
+            if (!retainedHoldMap) Serial.println("EPD: could not save retained map marker.");
+        }
+        Serial.println("EPD: map locked; panel asleep. USB H=redraw after cooldown, A=auto, U=live.");
+    }
     previous = screen;
 }
 
@@ -132,25 +164,33 @@ void setup() {
         Serial2.print("ERROR\r\n");
         return;
     }
-    panelAvailable = startPanel();
-    if (!panelAvailable) {
-        Serial.println("Display buffer allocation failed.");
-        Serial2.print("ERROR\r\n");
+    panelAvailable = true;
+    panelPreferencesAvailable = panelPreferences.begin("epaper", false);
+    if (!panelPreferencesAvailable) {
+        Serial.println("EPD: retained map storage unavailable.");
+    } else if (panelPreferences.getBool(holdMapKey, false)) {
+        retainedHoldMap = true;
+        Serial.println("EPD: retaining previous map without refreshing. USB H=redraw, A=auto, U=live.");
+        Serial2.print("READY\r\n");
     }
 }
 
 void loop() {
     while (Serial.available()) {
-        const int key = Serial.read();
-        if (key == 'A' || key == 'a') { mode = DisplayMode::Auto; redrawHold = false; }
-        if (key == 'U' || key == 'u') { mode = DisplayMode::Live; redrawHold = false; }
-        if (key == 'H' || key == 'h') {
+        const int key = tolower(Serial.read());
+        if ((key == 'a' || key == 'u' || key == 'h') && !invalidateRetainedMap()) continue;
+        if (key == 'a') { mode = DisplayMode::Auto; redrawHold = false; }
+        if (key == 'u') { mode = DisplayMode::Live; redrawHold = false; }
+        if (key == 'h') {
             mode = DisplayMode::Hold;
             if (!redrawHold) Serial.println("EPD: HOLD redraw requested; full refreshes are at least 180 s apart.");
             redrawHold = true;
         }
-        if (key == '?') Serial.printf("EPD: mode=%s completed refreshes=%" PRIu32 "\n",
-                                      modeNames[static_cast<unsigned>(mode)], panelRefreshCount());
+        if (key == '?') {
+            Serial.printf("EPD: mode=%s completed refreshes=%" PRIu32 " uptime=%lu ms reset=%d retained=%d\n",
+                          modeNames[static_cast<unsigned>(mode)], panelRefreshCount(), millis(),
+                          static_cast<int>(esp_reset_reason()), retainedHoldMap);
+        }
     }
     if (panelAvailable) updateDisplay();
     delay(100);

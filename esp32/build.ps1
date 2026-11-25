@@ -11,7 +11,7 @@ $work = Join-Path $PSScriptRoot '.build'
 $cache = Join-Path $work $revision
 $sketch = Join-Path $work 'ControlRoom'
 $lib = Join-Path $work 'libraries/ESP32epdx'
-$panel = 'examples/3-Colors (BWR)/7.5/GDEY075Z08'
+$panel = 'examples/2-Colors (BW)/7.5/GDEY075T7'
 $null = New-Item -ItemType Directory -Force $cache,$sketch,$lib
 
 function Copy-Upstream([string]$Path, [string]$Destination) {
@@ -48,13 +48,12 @@ $end = $driver.IndexOf('//Full screen update initialization', $start)
 if ($end -lt 0) { throw 'Unsupported BUSY function boundary' }
 $driver = $driver.Substring(0,$start) + "extern bool panelReady();`n" + $driver.Substring($end)
 $driver = $driver.Replace('lcd_chkstatus();','if (!panelReady()) return;')
-# POWER OFF can assert BUSY during the example's 100 ms delay. Check again
-# before DEEP SLEEP and keep at least 200 us after the last BUSY release.
-$sleepCommand = 'EPD_W21_WriteCMD(0X07);'
-if ([regex]::Matches($driver, [regex]::Escape($sleepCommand)).Count -ne 1) {
-    throw 'Unexpected Good Display deep sleep sequence.'
+# Let POWER OFF assert BUSY before polling and entering deep sleep.
+$powerOff = '(?im)^([ \t]*EPD_W21_WriteCMD\(0x02\);[ \t]*//power off[ \t]*\r?\n)([ \t]*if \(!panelReady\(\)\) return;)'
+if ([regex]::Matches($driver, $powerOff).Count -ne 1) {
+    throw 'Unexpected Good Display power-off sequence.'
 }
-$driver = $driver.Replace($sleepCommand, "if (!panelReady()) return;`n`t  delay_xms(1);`n`t  $sleepCommand")
+$driver = [regex]::Replace($driver, $powerOff, ('$1' + '    delay_xms(100);' + [Environment]::NewLine + '$2'))
 # The example already calculates the inclusive last pixel as start + size - 1.
 $driver = $driver.Replace('x_end%256-1','x_end%256').Replace('y_end%256-1','y_end%256')
 [IO.File]::WriteAllText($driverFile,$driver,[Text.UTF8Encoding]::new($false))
