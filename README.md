@@ -8,6 +8,8 @@
 
 **최종 제작도 v6:** [55×40 cm 외벽 밀착·중앙 폐쇄 3D 조립도, 평면도, 재단도](docs/foam-v6.md) · [TODO 및 실물 검증 순서](TODO.md).
 
+**ESP32·e-Ink 버전 기준:** [실물 식별·고정 라이브러리·빌드 및 검증 기록](docs/esp32-eink-versions.md).
+
 ## 빌드와 초기 설정
 
 다른 Windows PC에서는 프로젝트 전체를 새 폴더에 내려받아 압축을 푼 뒤 `stm32/Getting_start.eww`를 연다. 저장소의 `.gitattributes`가 STM32의 C·헤더·어셈블리·IAR 설정 파일을 Windows 개행(CRLF)으로 지정한다. 이전 소스 ZIP을 풀어 사용하던 경우 새 폴더에서 시작하고, 보정한 `site_profile.h` 값이 있으면 옮긴다. STM32는 수업용 IAR EWARM, ESP32는 Arduino IDE 2와 Espressif의 esp32 보드 패키지 2.0.17을 사용한다. [IAR 편집기 개행 설정](https://docs.iar.com/ewarm/10.1x/en/ide-project-management-and-building/the-development-environment/reference-information-on-the-ide/editor-options.html) · [Git 개행 설정](https://git-scm.com/docs/gitattributes#_eol)
