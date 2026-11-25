@@ -18,7 +18,7 @@ static bool panelAvailable, panelStarted;
 static Preferences panelPreferences;
 static bool panelPreferencesAvailable, retainedHoldMap;
 // Change the key when the default map artwork changes.
-static constexpr char holdMapKey[] = "hold-mono-v1";
+static constexpr char holdMapKey[] = "hold-foam-v6";
 enum class DisplayMode { Auto, Hold, Live };
 static DisplayMode mode = DisplayMode::Hold;
 static bool redrawHold;

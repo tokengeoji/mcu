@@ -8,7 +8,12 @@ unsigned char *PartImage;
 static unsigned char *blackPlane;
 static constexpr int rowBytes = EPD_WIDTH / 8;
 static constexpr size_t planeBytes = EPD_HEIGHT * rowBytes;
-static constexpr int startX = 100, startY = 110;
+static_assert(EPD_WIDTH == 800 && EPD_HEIGHT == 480, "v6 map requires the 800x480 panel");
+// Approved v6 base: 550 x 400 mm, +x right, +y down. Uniform 0.9 pixel/mm.
+static constexpr int mapLeft = 152, mapTop = 56;
+static constexpr int mapX(int mm) { return mapLeft + (mm * 9 + 5) / 10; }
+static constexpr int mapY(int mm) { return mapTop + (mm * 9 + 5) / 10; }
+static constexpr int startX = mapX(280), startY = mapY(90);
 static constexpr uint32_t busyLimitMs = 30000;
 static bool timedOut, needsFull = true;
 static int partialCount;
@@ -19,7 +24,7 @@ uint32_t panelRefreshCount() {
     return completedRefreshes;
 }
 
-// Called by the staged GDEY075Z08 driver at every manufacturer BUSY wait.
+// Called by the staged monochrome GDEY075T7 driver at every manufacturer BUSY wait.
 bool panelReady() {
     const uint32_t start = millis();
     busyLowMs = 0;
@@ -62,8 +67,15 @@ bool startPanel() {
     return true;
 }
 
-// Each measured axis maps onto the corresponding corridor in the design sketch.
-// Rendering the corridor schematically keeps S5 and the location marker apart.
+// Physical coordinates are the calibrated STM32 millimetres, not a schematic stretch.
+// Bounds are the four nominal v6 corridor interiors (corners intentionally overlap).
+static constexpr int corridorBounds[4][4] = {
+    {210, 20, 530, 160},
+    {390, 20, 530, 380},
+    {20, 240, 530, 380},
+    {20, 160, 160, 380}
+};
+
 bool locate(const Position &p, int &x, int &y) {
     if (!p.valid || p.corridor < 1 || p.corridor > 4) return false;
     const SiteCorridor &c = site_corridors[p.corridor - 1];
@@ -75,12 +87,10 @@ bool locate(const Position &p, int &x, int &y) {
     int64_t distance = horizontal ? (int64_t)p.x - c.x_mm : (int64_t)p.y - c.y_mm;
     distance *= direction;
     if (distance < 0 || distance > c.length_mm) return false;
-    const int fraction = direction > 0 ? (int)distance : c.length_mm - (int)distance;
-    const int left[] = {startX, 650, 270, 270}, top[] = {startY, startY, 250, 250};
-    const int span[] = {550, 140, 380, 135};
-    const int i = p.corridor - 1, delta = fraction * span[i] / c.length_mm;
-    x = left[i] + (horizontal ? delta : 0);
-    y = top[i] + (horizontal ? 0 : delta);
+    const int *b = corridorBounds[p.corridor - 1];
+    if (p.x <= b[0] || p.x >= b[2] || p.y <= b[1] || p.y >= b[3]) return false;
+    x = mapX(p.x);
+    y = mapY(p.y);
     return true;
 }
 
@@ -90,39 +100,64 @@ static void drawBoldText(int x, int y, const char *text, sFONT *font, uint16_t i
     Paint_DrawString_EN(x + 1, y, text, font, ink, WHITE);
 }
 
+// All rectangles are derived from docs/foam-v6-geometry.json, converted to mm.
+// Order: x_min, y_min, x_max, y_max (top-left origin).
+static constexpr int v6Walls[14][4] = {
+    {350, 0, 550, 20}, // W01
+    {180, 160, 390, 180}, // W02
+    {530, 20, 550, 400}, // W03
+    {0, 380, 265, 400}, // W04A
+    {265, 380, 530, 400}, // W04B
+    {0, 160, 20, 380}, // W05
+    {160, 220, 390, 240}, // W06
+    {370, 180, 390, 220}, // W07
+    {160, 160, 180, 220}, // W08
+    {0, 0, 210, 20}, // W09
+    {0, 20, 20, 160}, // W10
+    {190, 20, 210, 160}, // W11
+    {20, 140, 40, 160}, // W12
+    {140, 140, 190, 160}, // W13
+};
+
 static void drawMap(const Screen &s) {
     Paint_SelectImage(blackPlane);
     Paint_Clear(WHITE);
-    Paint_DrawRectangle(32, 45, 768, 432, BLACK, DRAW_FILL_EMPTY, DOT_PIXEL_4X4);
-    // Join the four corridors before filling their interior so corners stay open.
-    Paint_DrawRectangle(80, 90, 670, 130, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
-    Paint_DrawRectangle(630, 90, 670, 270, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
-    Paint_DrawRectangle(250, 230, 670, 270, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
-    Paint_DrawRectangle(250, 230, 290, 405, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
-    Paint_DrawRectangle(88, 98, 662, 122, WHITE, DRAW_FILL_FULL, DOT_PIXEL_1X1);
-    Paint_DrawRectangle(638, 98, 662, 262, WHITE, DRAW_FILL_FULL, DOT_PIXEL_1X1);
-    Paint_DrawRectangle(258, 238, 662, 262, WHITE, DRAW_FILL_FULL, DOT_PIXEL_1X1);
-    Paint_DrawRectangle(258, 238, 282, 397, WHITE, DRAW_FILL_FULL, DOT_PIXEL_1X1);
-    drawBoldText(80, 56, "START / S1", &Font24, BLACK);
-    Paint_DrawCircle(startX, startY, 21, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
-    Paint_DrawCircle(startX, startY, 16, WHITE, DRAW_FILL_FULL, DOT_PIXEL_1X1);
-    drawBoldText(688, 146, "S2", &Font24, BLACK);
-    drawBoldText(688, 235, "S3", &Font24, BLACK);
-    drawBoldText(312, 374, "S4 / DOOR", &Font24, BLACK);
-    drawBoldText(460, 309, "S5", &Font24, BLACK);
-    // Keep even the longest age or status on one native-pixel line.
+    for (const auto &w : v6Walls) {
+        Paint_DrawRectangle(mapX(w[0]), mapY(w[1]), mapX(w[2])-1, mapY(w[3])-1,
+                            BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+    }
+    // Closed destination door from the v6 plan. Static map, not live door position.
+    Paint_DrawRectangle(mapX(43), mapY(118), mapX(137)-1, mapY(138)-1,
+                        BLACK, DRAW_FILL_EMPTY, DOT_PIXEL_2X2);
+    // Hazard: y=160..230 mm, critical band y=185..215 mm in physical coordinates.
+    // In the top-left coordinate convention the critical band is y=185..215.
+    // Keep the interior white for the tracked position; dashed outer and dotted inner lines.
+    for (int x = mapX(390)+3; x+6 < mapX(530)-2; x += 12) {
+        Paint_DrawRectangle(x, mapY(160), x+6, mapY(160)+1, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+        Paint_DrawRectangle(x, mapY(230)-1, x+6, mapY(230), BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+    }
+    for (int x = mapX(390)+3; x+2 < mapX(530)-2; x += 8) {
+        Paint_DrawRectangle(x, mapY(185), x+2, mapY(185)+1, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+        Paint_DrawRectangle(x, mapY(215)-1, x+2, mapY(215), BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+    }
+    drawBoldText(362, 59, "ENTRY", &Font16, BLACK);
+    drawBoldText(366, 104, "START", &Font16, BLACK);
+    drawBoldText(193, 106, "ROOM", &Font20, BLACK);
+    drawBoldText(193, 185, "DOOR", &Font16, BLACK);
+    drawBoldText(356, 225, "CLOSED", &Font16, BLACK);
+    drawBoldText(657, 127, "S1", &Font20, BLACK);
+    drawBoldText(657, 216, "HAZARD", &Font16, BLACK);
+    drawBoldText(657, 238, "S5", &Font20, BLACK);
+    drawBoldText(95, 325, "S3", &Font20, BLACK);
+    drawBoldText(216, 418, "S4", &Font16, BLACK);
+    drawBoldText(549, 418, "S2", &Font16, BLACK);
+    Paint_DrawCircle(startX, startY, 14, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+    Paint_DrawCircle(startX, startY, 10, WHITE, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+    Paint_DrawCircle(startX, startY, 6, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
     const int textWidth = EPD_WIDTH - 65;
     drawBoldText(32, 11, s.location, strlen(s.location) * Font24.Width <= textWidth ? &Font24 : &Font20, BLACK);
     drawBoldText(32, 445, s.state, strlen(s.state) * Font24.Width <= textWidth ? &Font24 : &Font20, BLACK);
-    if (s.x >= 0) {
-        Paint_DrawCircle(s.x, s.y, 23, BLACK, DRAW_FILL_EMPTY, DOT_PIXEL_3X3);
-    }
-    Paint_DrawCircle(startX, startY, 11, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
-    for (int x = 395; x < 570; x += 22) {
-        Paint_DrawRectangle(x, 205, x + 16, 212, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
-        Paint_DrawRectangle(x, 289, x + 16, 296, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
-    }
-    drawBoldText(395, 172, "HAZARD ZONE", &Font24, BLACK);
+    if (s.x >= 0) Paint_DrawCircle(s.x, s.y, 16, BLACK, DRAW_FILL_EMPTY, DOT_PIXEL_2X2);
 }
 
 struct Window {
