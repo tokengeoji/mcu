@@ -6,6 +6,8 @@
 
 [센서·보드 핀 연결과 하드웨어 도면](docs/하드웨어_연결.md) · [진행 현황과 실물 시험 TODO](docs/프로젝트_진행현황.md) · [팀 배선계획과 동작 미리보기](docs/2조_위험구역_관제실_흐름_배선계획.html)
 
+**최신 제작도 v5:** [3D 모형·평면도·재단도](docs/foam-v5.md) · [TODO 및 실물 검증 순서](TODO.md).
+
 ## 빌드와 초기 설정
 
 다른 Windows PC에서는 프로젝트 전체를 새 폴더에 내려받아 압축을 푼 뒤 `stm32/Getting_start.eww`를 연다. 저장소의 `.gitattributes`가 STM32의 C·헤더·어셈블리·IAR 설정 파일을 Windows 개행(CRLF)으로 지정한다. 이전 소스 ZIP을 풀어 사용하던 경우 새 폴더에서 시작하고, 보정한 `site_profile.h` 값이 있으면 옮긴다. STM32는 수업용 IAR EWARM, ESP32는 Arduino IDE 2와 Espressif의 esp32 보드 패키지 2.0.17을 사용한다. [IAR 편집기 개행 설정](https://docs.iar.com/ewarm/10.1x/en/ide-project-management-and-building/the-development-environment/reference-information-on-the-ide/editor-options.html) · [Git 개행 설정](https://git-scm.com/docs/gitattributes#_eol)
