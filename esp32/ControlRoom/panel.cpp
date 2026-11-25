@@ -11,7 +11,6 @@ static constexpr size_t planeBytes = EPD_HEIGHT * rowBytes;
 static constexpr int startX = 100, startY = 110;
 static constexpr uint32_t busyLimitMs = 30000;
 static bool timedOut, needsFull = true;
-static bool clearedAtStartup;
 static int partialCount;
 static uint32_t busyLowMs;
 static uint32_t completedRefreshes;
@@ -98,27 +97,28 @@ static void makePlanes(const Screen &s) {
     Paint_DrawRectangle(634, 94, 666, 266, WHITE, DRAW_FILL_FULL, DOT_PIXEL_1X1);
     Paint_DrawRectangle(254, 234, 666, 266, WHITE, DRAW_FILL_FULL, DOT_PIXEL_1X1);
     Paint_DrawRectangle(254, 234, 286, 401, WHITE, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+    Paint_DrawString_EN(80, 56, "START / S1", &Font24, BLACK, WHITE);
+    Paint_DrawCircle(startX, startY, 19, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+    Paint_DrawCircle(startX, startY, 16, WHITE, DRAW_FILL_FULL, DOT_PIXEL_1X1);
     Paint_DrawString_EN(688, 146, "S2", &Font24, BLACK, WHITE);
     Paint_DrawString_EN(688, 235, "S3", &Font24, BLACK, WHITE);
     Paint_DrawString_EN(312, 374, "S4 / DOOR", &Font24, BLACK, WHITE);
+    Paint_DrawString_EN(460, 309, "S5", &Font20, BLACK, WHITE);
     // Keep even the longest age or status on one native-pixel line.
     const int textWidth = EPD_WIDTH - 64;
     Paint_DrawString_EN(32, 11, s.location, strlen(s.location) * Font24.Width <= textWidth ? &Font24 : &Font20, BLACK, WHITE);
     Paint_DrawString_EN(32, 445, s.state, strlen(s.state) * Font24.Width <= textWidth ? &Font24 : &Font20, BLACK, WHITE);
     if (s.x >= 0) {
-        Paint_DrawCircle(s.x, s.y, 18, BLACK, DRAW_FILL_FULL, DOT_PIXEL_1X1);
-        Paint_DrawCircle(s.x, s.y, 13, WHITE, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+        Paint_DrawCircle(s.x, s.y, 23, BLACK, DRAW_FILL_EMPTY, DOT_PIXEL_3X3);
     }
     Paint_SelectImage(redPlane);
     Paint_Clear(WHITE);
-    Paint_DrawString_EN(80, 56, "START / S1", &Font24, RED, WHITE);
-    Paint_DrawCircle(startX, startY, 15, RED, DRAW_FILL_FULL, DOT_PIXEL_1X1);
+    Paint_DrawCircle(startX, startY, 14, RED, DRAW_FILL_FULL, DOT_PIXEL_1X1);
     for (int x = 395; x < 570; x += 22) {
         Paint_DrawRectangle(x, 206, x + 14, 210, RED, DRAW_FILL_FULL, DOT_PIXEL_1X1);
         Paint_DrawRectangle(x, 290, x + 14, 294, RED, DRAW_FILL_FULL, DOT_PIXEL_1X1);
     }
     Paint_DrawString_EN(395, 172, "HAZARD ZONE", &Font24, RED, WHITE);
-    Paint_DrawString_EN(460, 309, "S5", &Font24, RED, WHITE);
     // EPD_SetRAMValue_BaseMap accepts ink=1; Good Display GUI emits ink=0.
     for (size_t i = 0; i < planeBytes; ++i) {
         redPlane[i] = ~redPlane[i];
@@ -174,42 +174,9 @@ static bool drawPartial(const Window &w) {
     return completed;
 }
 
-static bool clearAtStartup() {
-    // Exercise both ink states across the old image with the GDEY075Z08
-    // driver's full black and white frames. Resume at a failed frame on retry.
-    static unsigned int finishedFrames;
-    while (finishedFrames < 2) {
-        const bool black = finishedFrames == 0;
-        const char *color = black ? "black" : "white";
-        Serial.printf("EPD: initializing for %s clear.\n", color);
-        SPI.beginTransaction(SPISettings(10000000, MSBFIRST, SPI_MODE0));
-        EPD_Init();
-        bool refreshObserved = false;
-        if (!timedOut) {
-            Serial.printf("EPD: sending %s frame.\n", color);
-            if (black) EPD_WhiteScreen_Black();
-            else EPD_WhiteScreen_White();
-            refreshObserved = refreshCompleted(color);
-            if (refreshObserved)
-                Serial.printf("EPD: %s refresh BUSY wait %lu ms.\n", color, (unsigned long)busyLowMs);
-            if (!timedOut) EPD_DeepSleep();
-        }
-        SPI.endTransaction();
-        if (timedOut || !refreshObserved) return false;
-        Serial.printf("EPD: %s refresh complete.\n", color);
-        ++finishedFrames;
-        delay(3000);  // Sleep interval between full frames in the manufacturer's example.
-    }
-    return true;
-}
-
-bool drawScreen(const Screen &s, bool forceFull) {
+PanelUpdate drawScreen(const Screen &s, bool forceFull, bool fullAllowed) {
     timedOut = false;
     if (forceFull) needsFull = true;
-    if (!clearedAtStartup) {
-        clearedAtStartup = clearAtStartup();
-        if (!clearedAtStartup) return false;
-    }
     makePlanes(s);
     Window windows[3];
     int changed = 0;
@@ -228,20 +195,23 @@ bool drawScreen(const Screen &s, bool forceFull) {
             ++changed;
             if (hasRed(w)) needsFull = true;
         }
-        if (!changed) return true;
+        if (!changed) return PanelUpdate::Done;
         if (partialCount + changed > 5) needsFull = true;
     }
+    if (needsFull && !fullAllowed) return PanelUpdate::NeedsFull;
+    const bool full = needsFull;
     SPI.beginTransaction(SPISettings(10000000, MSBFIRST, SPI_MODE0));
     bool completed = true;
-    if (needsFull) {
+    if (full) {
         Serial.println("EPD: starting full refresh (GDEY075Z08).");
         EPD_Init();
         if (!timedOut) {
             Serial.println("EPD: panel initialized; sending map.");
             EPD_SetRAMValue_BaseMap(blackPlane, redPlane);
             completed = refreshCompleted("map");
-            if (completed)
+            if (completed) {
                 Serial.printf("EPD: refresh command sent; BUSY wait %lu ms.\n", (unsigned long)busyLowMs);
+            }
         }
         partialCount = 0;
     } else {
@@ -255,5 +225,6 @@ bool drawScreen(const Screen &s, bool forceFull) {
     if (!timedOut) EPD_DeepSleep();
     SPI.endTransaction();
     needsFull = timedOut || !completed;
-    return !needsFull;
+    if (needsFull) return PanelUpdate::Failed;
+    return full ? PanelUpdate::Full : PanelUpdate::Done;
 }

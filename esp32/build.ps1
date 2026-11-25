@@ -48,6 +48,13 @@ $end = $driver.IndexOf('//Full screen update initialization', $start)
 if ($end -lt 0) { throw 'Unsupported BUSY function boundary' }
 $driver = $driver.Substring(0,$start) + "extern bool panelReady();`n" + $driver.Substring($end)
 $driver = $driver.Replace('lcd_chkstatus();','if (!panelReady()) return;')
+# POWER OFF can assert BUSY during the example's 100 ms delay. Check again
+# before DEEP SLEEP and keep at least 200 us after the last BUSY release.
+$sleepCommand = 'EPD_W21_WriteCMD(0X07);'
+if ([regex]::Matches($driver, [regex]::Escape($sleepCommand)).Count -ne 1) {
+    throw 'Unexpected Good Display deep sleep sequence.'
+}
+$driver = $driver.Replace($sleepCommand, "if (!panelReady()) return;`n`t  delay_xms(1);`n`t  $sleepCommand")
 # The example already calculates the inclusive last pixel as start + size - 1.
 $driver = $driver.Replace('x_end%256-1','x_end%256').Replace('y_end%256-1','y_end%256')
 [IO.File]::WriteAllText($driverFile,$driver,[Text.UTF8Encoding]::new($false))

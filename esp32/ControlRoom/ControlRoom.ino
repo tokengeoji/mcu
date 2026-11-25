@@ -13,8 +13,12 @@ struct Feed {
 
 static QueueHandle_t newest;
 static bool panelAvailable;
-static bool holdMap = true;
+enum class DisplayMode { Auto, Hold, Live };
+static DisplayMode mode = DisplayMode::Hold;
+static bool redrawHold;
+static const char *const modeNames[] = {"AUTO", "HOLD", "LIVE"};
 static constexpr int64_t staleUs = 2500000; // 5 missed 500 ms heartbeats
+static constexpr int64_t refreshIntervalUs = 180000000;
 
 static void readLink(void *) {
     Feed feed = {};
@@ -60,14 +64,17 @@ static void readLink(void *) {
 static void updateDisplay() {
     static Screen previous;
     static bool displayed;
-    static bool showingHeldMap;
-    if (holdMap && showingHeldMap) return;
+    static int64_t nextFullAt, retryAfter;
+    const int64_t now = esp_timer_get_time();
+    const bool fixed = mode != DisplayMode::Live;
+    const bool automatic = mode == DisplayMode::Auto;
+    const bool fullAllowed = now >= nextFullAt;
+    if (now < retryAfter || (fixed && !fullAllowed)) return;
     Feed feed = {};
     xQueuePeek(newest, &feed, 0);
-    const int64_t now = esp_timer_get_time();
     Screen screen = {};
     screen.x = -1;
-    if (holdMap) {
+    if (fixed) {
         strcpy(screen.location, "CONTROL ROOM");
     } else if (feed.havePosition && now - feed.positionReceived < staleUs && feed.position.valid) {
         if (locate(feed.position, screen.x, screen.y)) {
@@ -84,27 +91,33 @@ static void updateDisplay() {
     } else {
         strcpy(screen.location, "POSITION UNKNOWN   NO FIX");
     }
-    if (holdMap) {
-        strcpy(screen.state, "MAP LOCKED");
+    if (fixed) {
+        strcpy(screen.state, automatic ? "MAP AUTO" : "MAP LOCKED");
     } else if (feed.haveStatus && now - feed.statusReceived < staleUs) {
         snprintf(screen.state, sizeof(screen.state), "CMD %s   S5 %s   DOOR %s",
                  feed.status.command, feed.status.alarm, feed.status.door);
     } else {
         strcpy(screen.state, "STM32 STATUS UNAVAILABLE");
     }
-    if (displayed && !memcmp(&screen, &previous, sizeof(screen))) return;
-    if (!drawScreen(screen, holdMap)) {
+    if (displayed && !automatic && !redrawHold && !memcmp(&screen, &previous, sizeof(screen))) return;
+    const PanelUpdate result = drawScreen(screen, fixed, fullAllowed);
+    if (result == PanelUpdate::NeedsFull) {
+        retryAfter = nextFullAt;
+        return;
+    }
+    if (result == PanelUpdate::Failed) {
+        retryAfter = esp_timer_get_time() + refreshIntervalUs;
         Serial.println("EPD: refresh unconfirmed; check power jumper P3 on ESP32-L. Retry in 180 s or restart.");
         Serial2.print("ERROR\r\n");
         displayed = false;
-        showingHeldMap = false;
-        delay(180000);  // Good Display tri-color refresh interval after an unconfirmed update.
         return;
     }
+    if (result == PanelUpdate::Full) nextFullAt = esp_timer_get_time() + refreshIntervalUs;
     if (!displayed) Serial2.print("READY\r\n");
     displayed = true;
-    showingHeldMap = holdMap;
-    if (holdMap) Serial.println("EPD: map locked; panel asleep. USB U=live, H=hold.");
+    redrawHold = false;
+    if (automatic) Serial.println("EPD: map auto; panel asleep. Next refresh in 180 s. USB A=auto, H=hold, U=live.");
+    if (mode == DisplayMode::Hold) Serial.println("EPD: map locked; panel asleep. USB H=redraw after cooldown, A=auto, U=live.");
     previous = screen;
 }
 
@@ -129,10 +142,15 @@ void setup() {
 void loop() {
     while (Serial.available()) {
         const int key = Serial.read();
-        if (key == 'U' || key == 'u') holdMap = false;
-        if (key == 'H' || key == 'h') holdMap = true;
+        if (key == 'A' || key == 'a') { mode = DisplayMode::Auto; redrawHold = false; }
+        if (key == 'U' || key == 'u') { mode = DisplayMode::Live; redrawHold = false; }
+        if (key == 'H' || key == 'h') {
+            mode = DisplayMode::Hold;
+            if (!redrawHold) Serial.println("EPD: HOLD redraw requested; full refreshes are at least 180 s apart.");
+            redrawHold = true;
+        }
         if (key == '?') Serial.printf("EPD: mode=%s completed refreshes=%" PRIu32 "\n",
-                                      holdMap ? "HOLD" : "LIVE", panelRefreshCount());
+                                      modeNames[static_cast<unsigned>(mode)], panelRefreshCount());
     }
     if (panelAvailable) updateDisplay();
     delay(100);

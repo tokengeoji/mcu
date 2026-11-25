@@ -9,5 +9,6 @@ struct Screen {
 
 bool startPanel();
 uint32_t panelRefreshCount();
-bool drawScreen(const Screen &screen, bool forceFull = false);
+enum class PanelUpdate { Done, Full, NeedsFull, Failed };
+PanelUpdate drawScreen(const Screen &screen, bool forceFull, bool fullAllowed);
 bool locate(const Position &position, int &x, int &y);
