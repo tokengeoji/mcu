@@ -1,6 +1,6 @@
-"""Exercise the desktop mapper through its buttons and a simulated UART event queue."""
+"""Run the kit UART protocol through a hidden Tk window and a fake serial stream."""
 
-import math
+from contextlib import contextmanager
 from pathlib import Path
 import queue
 from tempfile import TemporaryDirectory
@@ -10,10 +10,11 @@ from unittest.mock import patch
 import xml.etree.ElementTree as ET
 
 if __package__:
-    from . import app, map_view
+    from . import app, map_view, serial_input
 else:
     import app
     import map_view
+    import serial_input
 
 
 class FakeReader:
@@ -28,8 +29,11 @@ class FakeReader:
     def stop(self):
         self.stopped = True
 
-    def frame(self, sequence, angle, mm):
-        self.events.put(("line", f"SCAN,{sequence % 65536},{int(20 <= mm <= 300)},{angle},{mm}"))
+    def line(self, line):
+        self.events.put(("line", line))
+
+    def frame(self, seq, angle, mm):
+        self.line(f"SCAN,{seq % 65536},{int(20 <= mm <= 300)},{angle},{mm}")
 
 
 class MapperTests(unittest.TestCase):
@@ -49,140 +53,218 @@ class MapperTests(unittest.TestCase):
         self.addCleanup(reader.stop)
         self.gui = app.Mapper(self.root)
         self.addCleanup(self.gui.close)
-        self.gui.connect.invoke()
         self.device = self.gui.reader
         self.tick()
         self.assertTrue(self.gui.connected)
 
     def tick(self):
-        # Advance one normal polling cycle without sleeping or running another timer.
         self.root.after_cancel(self.gui.timer)
         self.gui._poll()
         self.root.update_idletasks()
 
-    def full_pass(self, start_sequence=0, reverse=False, distance=100):
+    def frames(self, seq=0, reverse=False, distance=100):
         angles = range(180, -1, -5) if reverse else range(0, 181, 5)
         for i, angle in enumerate(angles):
-            self.device.frame(start_sequence + i, angle, distance)
+            self.device.frame(seq+i, angle, distance)
+
+    def capture(self, station, distance=100):
+        self.device.line(f"BEGIN,{station}")
+        self.frames(distance=distance)
+        self.device.line(f"END,{station}")
         self.tick()
 
-    def exported_points(self):
+    def export(self):
         with TemporaryDirectory() as directory:
             path = Path(directory) / "scan.svg"
             with patch.object(map_view.filedialog, "asksaveasfilename", return_value=str(path)):
-                self.gui.save.invoke()
+                self.gui._save()
             svg = ET.parse(path).getroot()
         circles = svg.findall(".//{http://www.w3.org/2000/svg}circle[@data-x-cm]")
-        return svg, [(float(c.get("data-x-cm")), float(c.get("data-y-cm"))) for c in circles]
+        points = [(float(c.get("data-x-cm")), float(c.get("data-y-cm"))) for c in circles]
+        return svg, points
 
-    def test_live_before_first_endpoint_and_world_coordinates_in_svg(self):
-        for key, value in {"x": 5, "y": 5, "heading": 0, "offset": 2}.items():
-            self.gui.settings[key].set(str(value))
-        self.gui.record.invoke()
-        self.device.frame(99, 90, 100)
+    def test_keypad_transaction_displays_first_echo_before_end(self):
+        self.gui.poses["K3"].update(x=5, y=5, heading=90, offset=2, sign=1)
+        self.device.line("READY")
+        self.device.frame(15, 0, 100)  # Unframed data cannot start a station.
         self.tick()
-        self.assertEqual(self.gui.scans, [])
-        self.assertEqual(self.gui.sweep.progress, 0)
-        self.assertEqual(self.gui.map._points, [(17, 5)])
-        _, points = self.exported_points()
-        self.assertEqual(points, [(17, 5)])
-
-        # An echo beyond the board is not a hit on the rim. A timeout replaces
-        # the matching previous angle in the live preview.
-        self.device.frame(100, 95, 4000)
-        self.device.frame(101, 90, -1)
+        self.assertIsNone(self.gui.active)
+        self.gui._demo_key("3")  # A PC key cannot initiate a physical measurement.
+        self.assertIsNone(self.gui.active)
+        self.device.line("BEGIN,K3")
+        self.device.frame(65535, 0, 100)
         self.tick()
-        self.assertEqual(self.gui.map._points, [])
-        self.assertIn("무응답", self.gui.readout.get())
+        self.assertEqual(self.gui.map._points, [(17., 5.)])
+        self.assertEqual(self.gui.scans, {})
+        _, points = self.export()
+        self.assertEqual(points, [(17., 5.)])
+        # Settings edits apply to a future capture, not to the current point cloud.
+        self.gui.poses["K3"]["x"] = 30
+        for index in range(1, 37):
+            mm = 4000 if index == 1 else -1
+            self.device.frame(index-1, index*5, mm)
+        self.tick()
+        self.assertEqual(self.gui.sweep.progress, 37)
+        self.assertEqual(self.gui.map._points, [(17., 5.)])
+        self.assertEqual(self.gui.scans, {})
+        self.device.line("END,K3")
+        self.device.line("READY")
+        self.tick()
+        self.assertEqual(self.gui.scans["K3"]["x"], 5)
+        self.assertEqual(self.gui.scans["K3"]["samples"][180], -1)
+        self.assertNotIn("live_mm", self.gui.scans["K3"])
+        self.assertIsNone(self.gui.active)
+        self.assertIn("K3", self.gui.stage.get())
 
-    def test_three_captures_freeze_during_moves_and_save_all_stations(self):
-        for i, station in enumerate(app.STATIONS):
-            # Frames read during relocation, even if queued right before arming,
-            # must never be assigned to the new station.
-            self.device.frame(50 + i, 90, 80)
-            self.gui.record.invoke()
-            self.assertEqual(self.gui.active["samples"], {})
-            self.full_pass(start_sequence=65520, reverse=bool(i % 2))
-            self.assertIsNone(self.gui.active)
-            self.assertEqual([scan["id"] for scan in self.gui.scans], [s["id"] for s in app.STATIONS[:i+1]])
-            saved = self.gui.scans[-1]
-            self.assertEqual((saved["x"], saved["y"], saved["heading"]),
-                             (station["x"], station["y"], station["heading"]))
-            self.assertEqual(saved["samples"], dict.fromkeys(range(0, 181, 5), 100))
-            frozen = self.gui.map._points.copy()
-            self.device.frame(1200, 90, 350)
-            self.tick()
-            self.assertEqual(self.gui.map._points, frozen)
-        self.assertIn("disabled", self.gui.record.state())
-        svg, points = self.exported_points()
-        self.assertEqual(points, frozen)
+    def test_arbitrary_order_and_rescan_replaces_only_after_valid_end(self):
+        for sid in ("K3", "K1", "K2"):
+            self.capture(sid)
+        originals = self.gui.scans.copy()
+        frozen = self.gui.map._points.copy()
+        self.device.line("BEGIN,K1")
+        self.device.frame(700, 0, 140)
+        self.tick()
+        self.assertIs(self.gui.scans["K1"], originals["K1"])
+        self.device.line("END,K1")
+        self.tick()
+        self.assertIsNone(self.gui.active)
+        self.assertEqual(self.gui.map._points, frozen)
+        self.device.line("BEGIN,K1")
+        self.frames(seq=65520, reverse=True, distance=140)
+        self.device.line("END,K1")
+        self.tick()
+        self.assertEqual(len(self.gui.scans), 3)
+        self.assertEqual(self.gui.scans["K1"]["samples"], dict.fromkeys(range(0,181,5), 140))
+        self.assertIs(self.gui.scans["K3"], originals["K3"])
+        self.assertIs(self.gui.scans["K2"], originals["K2"])
+        svg, points = self.export()
         labels = {node.text for node in svg.iter("{http://www.w3.org/2000/svg}text")}
         self.assertTrue({"K1", "K2", "K3"}.issubset(labels))
-        self.assertTrue(all(0 <= x <= 55 and 0 <= y <= 40 for x, y in points))
+        self.assertTrue(points)
+        self.assertTrue(all(0 <= x <= 55 and 0 <= y <= 40 for x,y in points))
 
-    def test_read_error_drops_partial_and_reconnect_retries_same_station(self):
-        self.gui.record.invoke()
-        self.full_pass()
-        first_map = self.gui.map._points.copy()
-        self.gui.record.invoke()
-        self.device.frame(90, 90, 100)
+    def test_bad_sequence_marker_or_empty_echo_never_commits(self):
+        self.capture("K2")
+        saved = self.gui.scans["K2"]
+        for problem in ("gap", "duplicate", "reset", "bad", "wrong end", "extra", "no echo", "bad id"):
+            with self.subTest(problem=problem):
+                self.device.line("BEGIN,K2")
+                for i in range(37):
+                    if i == 15:
+                        if problem == "gap":
+                            continue
+                        if problem == "duplicate":
+                            self.device.frame(i-1, (i-1)*5, 50)
+                        if problem in ("reset", "bad", "bad id"):
+                            self.device.line({"reset":"READY", "bad":"SCAN,15,1,75,bad",
+                                              "bad id":"BEGIN,K4"}[problem])
+                    self.device.frame(i, i*5, -1 if problem == "no echo" else 50)
+                if problem == "extra":
+                    self.device.frame(37, 175, 50)
+                self.device.line("END,K3" if problem == "wrong end" else "END,K2")
+                self.tick()
+                self.assertIs(self.gui.scans["K2"], saved)
+                self.assertIsNone(self.gui.active)
+        self.device.line("BEGIN,K1")
+        self.device.frame(18, 0, 110)
+        self.device.line("BEGIN,K3")
+        self.frames(distance=90)
+        self.device.line("END,K3")
         self.tick()
-        self.assertGreater(len(self.gui.map._points), len(first_map))
+        self.assertEqual(set(self.gui.scans), {"K2", "K3"})
+        self.assertEqual(set(self.gui.scans["K3"]["samples"].values()), {90})
+
+    def test_timeout_and_disconnect_keep_saved_stations(self):
+        self.capture("K1")
+        frozen = self.gui.map._points.copy()
+        self.device.line("BEGIN,K3")
+        self.tick()
+        self.gui.last_frame_at -= 6
+        self.tick()
+        self.assertIsNone(self.gui.active)
+        self.assertEqual(self.gui.map._points, frozen)
+        self.device.line("BEGIN,K1")
+        self.device.frame(13, 0, 120)
         self.device.events.put(("error", "test cable disconnected"))
         self.device.events.put(("closed", self.device.port))
         self.tick()
         self.assertFalse(self.gui.connected)
         self.assertIsNone(self.gui.active)
-        self.assertEqual(self.gui.map._points, first_map)
-        self.assertEqual(len(self.gui.scans), 1)
-        self.gui.connect.invoke()
+        self.assertEqual(self.gui.map._points, frozen)
+        self.gui._connect("COM77")
+        self.device = self.gui.reader
         self.tick()
-        self.gui.record.invoke()
-        self.assertEqual(self.gui.active["id"], "K2")
-        self.assertEqual(self.gui.active["samples"], {})
+        self.device.frame(14,5,80)
+        self.device.line("END,K1")
+        self.tick()
+        self.assertEqual(self.gui.map._points, frozen)
 
-    def test_gap_cannot_commit_and_all_no_echo_pass_requests_retry(self):
-        self.gui.record.invoke()
-        for i, angle in enumerate(range(0, 181, 5)):
-            if angle != 90:
-                self.device.frame(i, angle, 200)
-        self.tick()
-        self.assertFalse(self.gui.scans)
-        self.assertEqual(self.gui.sweep.progress, 1)
-        self.full_pass(start_sequence=220, reverse=True, distance=-1)
-        self.assertFalse(self.gui.scans)
-        self.assertIsNone(self.gui.active)
-        self.assertEqual(self.gui.map._points, [])
-        self.gui.record.invoke()
-        self.assertEqual(self.gui.active["id"], "K1")
-
-    def test_demo_and_real_frames_are_isolated_across_mode_changes(self):
-        self.gui.record.invoke()
-        self.full_pass()
-        self.gui.mode.set(app.DEMO)
-        with patch.object(app.messagebox, "askyesno", return_value=True):
-            self.gui._change_mode()
-        self.assertTrue(self.device.stopped)
-        self.assertEqual(self.gui.scans, [])
-        self.gui.record.invoke()
-        self.gui.demo_due = math.inf
-        self.device.frame(100, 75, 369)
-        self.device.events.put(("closed", self.device.port))
-        self.tick()
-        self.assertEqual(self.gui.active["samples"], {})
-        self.gui.demo_due = 0
-        with patch.object(app, "demo_distance", return_value=100):
+    def test_calibration_status_survives_ready_without_mapping(self):
+        self.device.line("BEGIN,K1")
+        self.device.frame(0,0,100)
+        for angle, pulse in ((90,1500),(0,950),(180,2000)):
+            self.device.line(f"CAL,{angle},{pulse}")
             self.tick()
-        self.assertEqual(self.gui.active["samples"], {90: 100})
-        svg, points = self.exported_points()
+            self.assertIn(f"{angle}°", self.gui.stage.get())
+            self.assertIn(str(pulse), self.gui.stage.get())
+            self.assertIsNone(self.gui.active)
+        self.device.line("CAL,DONE,950,1500,2000")
+        self.device.line("READY")
+        self.tick()
+        self.assertIn("950 / 1500 / 2000", self.gui.stage.get())
+        self.device.line("CAL,VOLATILE")
+        self.device.line("READY")
+        self.tick()
+        self.assertIn("이번", self.gui.stage.get())
+        self.assertEqual(self.gui.map._points, [])
+        self.assertEqual(self.gui.scans, {})
+
+    def test_demo_and_real_are_separate_and_export_is_labeled(self):
+        self.capture("K1")
+        with patch.object(app.messagebox, "askyesno", return_value=True):
+            self.gui._set_demo(True)
+        self.assertTrue(self.device.stopped)
+        self.assertFalse(self.gui.scans)
+        self.gui._demo_key("2")
+        self.device.line("BEGIN,K3")
+        self.device.frame(100, 0, 369)
+        self.device.events.put(("closed", self.device.port))
+        for _ in range(37):
+            self.gui.demo_due = 0
+            self.tick()
+        self.assertEqual(set(self.gui.scans), {"K2"})
+        svg, points = self.export()
         self.assertTrue(points)
         self.assertIn("모의", svg.find("{http://www.w3.org/2000/svg}title").text)
-        self.gui.mode.set(app.REAL)
         with patch.object(app.messagebox, "askyesno", return_value=True):
-            self.gui._change_mode()
-        self.assertEqual(self.gui.map._points, [])
+            self.gui._set_demo(False)
+        self.assertEqual(self.gui.scans, {})
         self.assertIsNone(self.gui.active)
-        self.assertIn("disabled", self.gui.record.state())
+        self.assertFalse(self.gui.map._simulated)
+
+
+class SerialTests(unittest.TestCase):
+    def test_fragmented_lines_and_disconnection(self):
+        chunks = iter([b"BE", b"GIN,K1\r\nSCAN,12,1,0", b",100\r\n",
+                       b"SCAN,13,1,5,\xff\n", b"X"*260+b"\nEND,K1\r\n"])
+        @contextmanager
+        def fake_open(_port):
+            def read():
+                try:
+                    return next(chunks)
+                except StopIteration:
+                    raise OSError("disconnected")
+            yield read
+
+        reader = serial_input.SerialReader("COM77")
+        with patch.object(serial_input, "_open_port", fake_open):
+            reader.run()
+        events = []
+        while not reader.events.empty():
+            events.append(reader.events.get_nowait())
+        self.assertEqual([kind for kind,_ in events], ["connected", "line", "line", "line", "error", "closed"])
+        self.assertEqual([value for kind,value in events if kind == "line"],
+                         ["BEGIN,K1", "SCAN,12,1,0,100", "END,K1"])
 
 
 if __name__ == "__main__":

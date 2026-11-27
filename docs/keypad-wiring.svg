@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="780" viewBox="0 0 1100 780" xml:lang="ko" role="img" aria-labelledby="title desc">
+  <title id="title">키패드 숫자 1·2·3으로 측정 시작하기</title>
+  <desc id="desc">HBE-MCU-Multi 키패드 모듈 하단 J1의 C0, C1, C2 출력을 STM32 왼쪽 J3의 오른쪽 열 PB12, PB13, PB14에 연결한다. 키트의 확인된 +5 V를 J1의 R0 입력에 연결한다. 같은 실습판에 장착한 모듈은 접지를 공유한다.</desc>
+  <defs>
+    <style>
+      text {font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif; fill:#19353d}
+      .title {font-size:36px; font-weight:700}
+      .body {font-size:18px}
+      .head {font-size:22px; font-weight:700}
+      .note {font-size:16px; fill:#45616a}
+      .pin {font-size:19px; font-weight:700}
+      .silk {font-size:13px; font-weight:700; fill:#45594e}
+      .key {font-size:14px; font-weight:700; text-anchor:middle}
+      .tab {font-size:15px; font-weight:700; fill:#586c74}
+    </style>
+    <pattern id="pinsH" x="79" y="343" width="11" height="9" patternUnits="userSpaceOnUse">
+      <rect width="11" height="9" fill="#364944"/><circle cx="5" cy="4.5" r="2.4" fill="#b6c7b8"/>
+    </pattern>
+    <pattern id="pinsV" x="624" y="210" width="10" height="8" patternUnits="userSpaceOnUse">
+      <rect width="10" height="8" fill="#364944"/><circle cx="5" cy="4" r="2.4" fill="#b6c7b8"/>
+    </pattern>
+    <g id="button"><rect x="-19" y="-10" width="38" height="20" rx="4" fill="#f1f5f2" stroke="#aab9ad"/></g>
+    <g id="selected"><rect x="-19" y="-10" width="38" height="20" rx="4" fill="#d2eee5" stroke="#1a7364" stroke-width="1.7"/></g>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="11" markerHeight="11" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0L10 5L0 10Z" fill="#137666"/></marker>
+    <marker id="power" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="11" markerHeight="11" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0L10 5L0 10Z" fill="#a04c2f"/></marker>
+  </defs>
+  <rect width="1100" height="780" fill="#f4f8f7"/>
+  <text x="40" y="62" class="title">키패드 배선 · 숫자 1·2·3으로 측정 시작</text>
+  <text x="41" y="101" class="body">센서를 K1·K2·K3 중 측정할 위치에 놓고, 키트에서 같은 번호를 한 번 눌렀다 놓는다.</text>
+
+  <g fill="white" stroke="#c4d3cf"><rect x="36" y="127" width="499" height="273" rx="12"/><rect x="550" y="127" width="514" height="273" rx="12"/></g>
+  <text x="58" y="165" class="head">키패드 모듈 · 하단 J1</text>
+  <rect x="62" y="186" width="211" height="185" rx="9" fill="#e2ebe3" stroke="#91a59a"/>
+  <text x="167" y="207" class="silk" text-anchor="middle">KEYPAD MODULE</text>
+  <g>
+    <use href="#selected" x="116" y="226"/><use href="#selected" x="167" y="226"/><use href="#selected" x="218" y="226"/>
+    <use href="#button" x="116" y="253"/><use href="#button" x="167" y="253"/><use href="#button" x="218" y="253"/>
+    <use href="#button" x="116" y="280"/><use href="#button" x="167" y="280"/><use href="#button" x="218" y="280"/>
+    <use href="#button" x="116" y="307"/><use href="#button" x="167" y="307"/><use href="#button" x="218" y="307"/>
+  </g>
+  <g class="key">
+    <text x="116" y="231">1</text><text x="167" y="231">2</text><text x="218" y="231">3</text>
+    <text x="116" y="258">4</text><text x="167" y="258">5</text><text x="218" y="258">6</text>
+    <text x="116" y="285">7</text><text x="167" y="285">8</text><text x="218" y="285">9</text>
+    <text x="116" y="312">*</text><text x="167" y="312">0</text><text x="218" y="312">#</text>
+  </g>
+  <text x="82" y="339" class="silk">J1</text>
+  <rect x="79" y="343" width="176" height="18" fill="url(#pinsH)"/>
+  <rect x="78" y="342" width="45" height="20" rx="3" fill="none" stroke="#138977" stroke-width="3"/>
+  <path d="M102 365v12h174l13-15" fill="none" stroke="#138977" stroke-width="1.8"/>
+  <text x="294" y="226" class="pin">맨 위 줄을 사용한다</text>
+  <text x="294" y="259" class="body">1 → K1</text><text x="294" y="286" class="body">2 → K2</text><text x="294" y="313" class="body">3 → K3</text>
+  <text x="294" y="355" class="note">J1의 C0·C1·C2·R0</text>
+  <text x="294" y="378" class="note">인쇄를 확인한다.</text>
+
+  <text x="572" y="165" class="head">STM32 모듈 · 왼쪽 J3의 오른쪽 열</text>
+  <rect x="580" y="186" width="244" height="185" rx="9" fill="#e2ebe3" stroke="#91a59a"/>
+  <text x="618" y="206" class="silk">J3</text><text x="790" y="206" class="silk">J4</text>
+  <rect x="624" y="210" width="20" height="128" fill="url(#pinsV)"/><rect x="784" y="210" width="20" height="128" fill="url(#pinsV)"/>
+  <rect x="678" y="238" width="49" height="43" rx="3" fill="#50635b"/>
+  <g fill="#62b9a2" stroke="#075b4c"><circle cx="639" cy="294" r="3.5"/><circle cx="639" cy="302" r="3.5"/><circle cx="639" cy="310" r="3.5"/></g>
+  <rect x="634" y="289" width="10" height="26" rx="3" fill="none" stroke="#137666" stroke-width="2"/>
+  <path d="M646 302h20" stroke="#137666" stroke-width="1.5"/>
+  <text x="670" y="307" class="silk">PB12–PB14</text>
+  <circle cx="762" cy="337" r="8" fill="#b75a48"/><text x="761" y="361" class="silk" text-anchor="middle">RESET</text>
+  <text x="843" y="228" class="pin">RESET은 오른쪽 아래</text>
+  <text x="843" y="262" class="note">J3의 PB 쪽 열(1-R)에서</text>
+  <text x="843" y="288" class="note">PB12 · PB13 · PB14</text>
+  <text x="843" y="313" class="note">인쇄를 위에서 아래로</text>
+  <text x="843" y="338" class="note">차례로 찾는다.</text>
+
+  <rect x="36" y="416" width="1028" height="244" rx="12" fill="white" stroke="#c4d3cf"/>
+  <text x="58" y="452" class="head">점퍼 4가닥</text>
+  <text x="58" y="481" class="tab">키패드 앞면 J1</text><text x="602" y="481" class="tab">STM32 입력 / 실습판 전원</text>
+  <g fill="none" stroke="#e3ebe8"><path d="M57 489H1040M57 528H1040M57 567H1040M57 606H1040"/></g>
+  <g class="pin">
+    <text x="60" y="516">J1-1 · C0</text><text x="60" y="555">J1-3 · C1</text><text x="60" y="594">J1-5 · C2</text><text x="60" y="637">J1-7 · R0</text>
+    <text x="602" y="516">PB12</text><text x="602" y="555">PB13</text><text x="602" y="594">PB14</text><text x="602" y="637" style="fill:#9a462d">키트 +5 V 전원점</text>
+  </g>
+  <g class="note"><text x="177" y="516">숫자 1 출력</text><text x="177" y="555">숫자 2 출력</text><text x="177" y="594">숫자 3 출력</text><text x="177" y="637">첫째 행 입력</text>
+    <text x="704" y="516">J3 오른쪽 열</text><text x="704" y="555">J3 오른쪽 열</text><text x="704" y="594">J3 오른쪽 열</text><text x="800" y="637">GND 기준 약 5 V 확인</text></g>
+  <g stroke="#137666" stroke-width="2.5" marker-end="url(#arrow)"><path d="M325 509H569"/><path d="M325 548H569"/><path d="M325 587H569"/></g>
+  <path d="M569 630H325" stroke="#a04c2f" stroke-width="2.5" marker-end="url(#power)"/>
+  <text x="42" y="697" class="body">키트의 +5 V 표시와 전압을 확인한 뒤 전원을 끄고 결선한다. 두 모듈은 같은 실습판의 GND를 공유한다.</text>
+  <text x="42" y="727" class="note">R1·R2·R3은 모듈 내부에서 풀다운되므로 비워 둔다. J1-1은 숫자 1의 신호 출력이다.</text>
+  <text x="42" y="757" class="note">근거  ·  강원대 「실험2-Keypad」 6·8·9쪽, 「실험1-GPIO-InputOutput」 20쪽, ST DS5319 표 5 (PB12–PB14).</text>
+</svg>

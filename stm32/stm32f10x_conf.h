@@ -56,7 +56,9 @@
 /* Uncomment the line below to enable FLASH program/erase/protections functions,
    otherwise only FLASH configuration (latency, prefetch, half cycle) functions
    are enabled */
-/* #define _FLASH_PROG */
+#if !CENTER_ONLY && !BENCH_CHECK
+#define _FLASH_PROG
+#endif
 
 /************************************* GPIO ***********************************/
 #define _GPIO

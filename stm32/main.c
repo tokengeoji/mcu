@@ -1,6 +1,9 @@
 /* HBE-MCU-MULTI STM32F103RBT6. USART3 TX reports each angle and distance. */
 #include "System_func.h"
 #include "scan_config.h"
+#if !CENTER_ONLY && !BENCH_CHECK
+#include "servo_store.h"
+#endif
 
 static void pin_mode(GPIO_TypeDef *port, u16 pins, GPIOMode_TypeDef mode)
 {
@@ -23,9 +26,15 @@ static void timer_base(TIM_TypeDef *timer, u32 clock_hz, u16 period)
 }
 #endif
 
+/* Index 0/1/2 holds the calibrated pulse for 0/90/180 commanded degrees. */
+static u16 servo_us[] = { SERVO_0_US, SERVO_CENTER_US, SERVO_180_US };
+
 static u16 pulse_for_angle(int angle)
 {
-    return (u16)(SERVO_0_US + ((long)angle * (SERVO_180_US - SERVO_0_US) + 90) / 180);
+    int half = angle > 90;
+    int within_half = angle - 90 * half;
+    return (u16)(servo_us[half] +
+        ((long)within_half * (servo_us[half + 1] - servo_us[half]) + 45) / 90);
 }
 
 static void init_servo(u32 clock_hz)
@@ -87,6 +96,11 @@ static void init_scan(u32 timer_apb1)
     pin_mode(GPIOA, GPIO_Pin_0, GPIO_Mode_IPD);
     pin_mode(GPIOA, GPIO_Pin_6, GPIO_Mode_AF_PP);
     pin_mode(GPIOB, GPIO_Pin_10, GPIO_Mode_AF_PP);
+#if !BENCH_CHECK
+    /* 5 V HC244 column outputs C0/C1/C2 need FT pins with pulls disabled.
+       The keypad's R0 is tied to its own +5 V; other rows have board pulldowns. */
+    pin_mode(GPIOB, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14, GPIO_Mode_IN_FLOATING);
+#endif
     USART_StructInit(&serial);
     serial.USART_BaudRate = 115200;
     serial.USART_Mode = USART_Mode_Tx; /* PB10 only, 115200 8N1. */
@@ -197,7 +211,10 @@ static int measure_mm(void)
 
 static void serial_char(char ch)
 {
-    while (USART_GetFlagStatus(USART3, USART_FLAG_TXE) == RESET) { }
+    u16 start = TIM_GetCounter(TIM2);
+    while (USART_GetFlagStatus(USART3, USART_FLAG_TXE) == RESET) {
+        if ((u16)(TIM_GetCounter(TIM2) - start) >= 1000) return;
+    }
     USART_SendData(USART3, (u16)(unsigned char)ch);
 }
 
@@ -228,42 +245,186 @@ static void publish_scan(u16 sequence, int alert, int angle, int distance)
     else serial_unsigned((u16)distance);
     serial_text("\r\n");
 }
+
+static int sample_angle(int angle, int previous_alert)
+{
+    static u16 sequence;
+    int distance = measure_mm();
+    int alert = distance >= 0 &&
+        (previous_alert ? distance < ALERT_RELEASE_MM : distance <= ALERT_ENTER_MM);
+    set_buzzer(alert);
+    publish_scan(sequence++, alert, angle, distance);
+    return alert;
+}
+
+#if !BENCH_CHECK
+#define KEY_POLL_MS 5
+#define KEY_STABLE_POLLS 6
+#define CALIBRATION_KEYS 5 /* K1 and K3, the first and third columns */
+
+static u8 key_mask(void)
+{
+    return (u8)((GPIO_ReadInputData(GPIOB) >> 12) & 7);
+}
+
+/* After boot, a chord, a scan, or a long press, a stable release is required
+   before any new single key can trigger. Poll every KEY_POLL_MS while idle. */
+static char key_press(void)
+{
+    /* Index is the three-bit column mask. Multiple columns are ignored. */
+    static const char digits[8] = { 0, '1', '2', 0, '3', 0, 0, 0 };
+    static u8 previous, stable_polls, armed;
+    u8 keys = key_mask();
+    if (keys != previous) {
+        previous = keys;
+        stable_polls = 0;
+    }
+    if (stable_polls < KEY_STABLE_POLLS) ++stable_polls;
+    if (stable_polls == KEY_STABLE_POLLS) {
+        if (!keys) armed = 1;
+        else if (armed) {
+            armed = 0;
+            return digits[keys];
+        }
+    }
+    return 0;
+}
+
+static int calibration_requested(void)
+{
+    unsigned i;
+    for (i = 0; i < 8; ++i) {
+        if (key_mask() != CALIBRATION_KEYS) return 0;
+        wait_ms(KEY_POLL_MS);
+    }
+    return 1;
+}
+
+static void report_calibration(u8 point)
+{
+    serial_text("CAL,");
+    serial_unsigned((u16)(90 * point));
+    serial_char(',');
+    serial_unsigned(servo_us[point]);
+    serial_text("\r\n");
+}
+
+/* Move between calibration positions in small steps, including the long
+   transition from the low endpoint to the high endpoint. */
+static void seek_calibration_pulse(int current, int target)
+{
+    while (current != target) {
+        int difference = target - current;
+        if (difference > TRIM_STEP_US) difference = TRIM_STEP_US;
+        if (difference < -TRIM_STEP_US) difference = -TRIM_STEP_US;
+        current += difference;
+        TIM1_SetCompare1((u16)current);
+        wait_ms(20);
+    }
+}
+
+static void calibrate(void)
+{
+    static const u8 order[] = { 1, 0, 2 }; /* center, short pulse, long pulse */
+    unsigned stage;
+    int pulse, low, high, current = servo_us[1];
+    u8 point;
+    char key;
+    for (stage = 0; stage < sizeof(order) / sizeof(order[0]); ++stage) {
+        unsigned elapsed = 1000;
+        point = order[stage];
+        low = point == 0 ? SERVO_MIN_US : servo_us[point - 1] + TRIM_STEP_US;
+        high = point == 2 ? SERVO_MAX_US : servo_us[point + 1] - TRIM_STEP_US;
+        seek_calibration_pulse(current, servo_us[point]);
+        for (;;) {
+            if (elapsed >= 1000) { report_calibration(point); elapsed = 0; }
+            wait_ms(KEY_POLL_MS);
+            elapsed += KEY_POLL_MS;
+            key = key_press();
+            if (key == '2') break;
+            if (key == '1' || key == '3') {
+                pulse = servo_us[point] + (key == '1' ? -TRIM_STEP_US : TRIM_STEP_US);
+                if (pulse < low) pulse = low;
+                if (pulse > high) pulse = high;
+                servo_us[point] = (u16)pulse;
+                TIM1_SetCompare1(servo_us[point]);
+                elapsed = 1000;
+            }
+        }
+        current = servo_us[point];
+    }
+    seek_calibration_pulse(current, servo_us[1]);
+    serial_text("CAL,DONE,");
+    serial_unsigned(servo_us[0]);
+    serial_char(',');
+    serial_unsigned(servo_us[1]);
+    serial_char(',');
+    serial_unsigned(servo_us[2]);
+    serial_text("\r\n");
+    if (!servo_store_save(servo_us[0], servo_us[1], servo_us[2]))
+        serial_text("CAL,VOLATILE\r\n");
+    wait_ms(ENDPOINT_SETTLE_MS);
+}
+
+static void station_message(const char *prefix, char station)
+{
+    serial_text(prefix);
+    serial_char(station);
+    serial_text("\r\n");
+}
+
+static void scan_station(char station)
+{
+    int angle, alert = 0;
+    station_message("BEGIN,K", station);
+    for (angle = SCAN_LEFT_DEG; angle <= SCAN_RIGHT_DEG; angle += SCAN_STEP_DEG) {
+        TIM1_SetCompare1(pulse_for_angle(angle));
+        wait_ms(angle == SCAN_LEFT_DEG ? ENDPOINT_SETTLE_MS : STEP_SETTLE_MS);
+        alert = sample_angle(angle, alert);
+    }
+    set_buzzer(0);
+    TIM1_SetCompare1(pulse_for_angle(SCAN_CENTER_DEG));
+    wait_ms(ENDPOINT_SETTLE_MS);
+    station_message("END,K", station);
+}
+
+static void run_keypad(void)
+{
+    unsigned idle_ms = 1000;
+    char key;
+    if (calibration_requested()) calibrate();
+    for (;;) {
+        if (idle_ms >= 1000) { serial_text("READY\r\n"); idle_ms = 0; }
+        key = key_press();
+        if (key != 0) {
+            scan_station(key);
+            idle_ms = 1000;
+        }
+        wait_ms(KEY_POLL_MS);
+        idle_ms += KEY_POLL_MS;
+    }
+}
+#endif
 #endif
 
 int main(void)
 {
-#if CENTER_ONLY
-    init_hardware();
-    for (;;) { } /* TIM1 holds 90 degrees until reset. */
-#else
-    u16 sequence = 0;
-    int angle = SCAN_CENTER_DEG, alert = 0;
-#if !BENCH_CHECK
-    int step = SCAN_STEP_DEG;
-#endif
-    int distance;
-    init_hardware();
 #if BENCH_CHECK
+    int alert = 0;
+#elif !CENTER_ONLY
+    servo_store_load(&servo_us[0], &servo_us[1], &servo_us[2]);
+#endif
+    init_hardware();
+#if CENTER_ONLY
+    for (;;) { } /* TIM1 holds 90 degrees until reset. */
+#elif BENCH_CHECK
     bench_startup();
-#else
-    wait_ms(START_SETTLE_MS);
-#endif
     for (;;) {
-        distance = measure_mm();
-        /* Invalid echoes clear the alert; hysteresis limits chatter near the boundary. */
-        alert = distance >= 0 && (alert ? distance < ALERT_RELEASE_MM : distance <= ALERT_ENTER_MM);
-        set_buzzer(alert);
-        publish_scan(sequence++, alert, angle, distance);
-
-#if !BENCH_CHECK
-        if (angle == SCAN_RIGHT_DEG) step = -SCAN_STEP_DEG;
-        if (angle == SCAN_LEFT_DEG) step = SCAN_STEP_DEG;
-        angle += step;
-        if (angle > SCAN_RIGHT_DEG) angle = SCAN_RIGHT_DEG;
-        if (angle < SCAN_LEFT_DEG) angle = SCAN_LEFT_DEG;
-        TIM1_SetCompare1(pulse_for_angle(angle));
-#endif
+        alert = sample_angle(SCAN_CENTER_DEG, alert);
         wait_ms(STEP_SETTLE_MS);
     }
+#else
+    run_keypad();
+    return 0;
 #endif
 }

@@ -1,8 +1,9 @@
-"""Windows desktop mapper for the three marked positions on the v6 board."""
+"""Live map controlled by the STM32 kit keypad over its transmit-only UART."""
 
 import math
 from pathlib import Path
 import queue
+import re
 import time
 import tkinter as tk
 from tkinter import messagebox, ttk
@@ -19,359 +20,341 @@ else:
     from serial_input import SerialReader, list_ports
 
 
-REAL, DEMO = "실제 센서", "모의 측정"
-CLOCKWISE, COUNTERCLOCKWISE = "시계 방향", "반시계 방향"
-BG, INK, MUTED, ACCENT = "#f4f6f5", "#19332d", "#48625b", "#08695a"
 FONT = "Malgun Gothic"
+CLOCKWISE, COUNTERCLOCKWISE = "시계 방향", "반시계 방향"
+KEY_HINT = "키트 키패드 1·2·3으로 측정할 지점을 선택하세요."
 
 
 class Mapper:
-    def __init__(self, root):
+    def __init__(self, root, *, demo=False):
         self.root = root
         root.title("초음파 지도 · STM32")
-        root.configure(bg=BG)
-        screen_w, screen_h = root.winfo_screenwidth(), root.winfo_screenheight()
-        root.geometry(f"{min(1170, screen_w - 24)}x{min(765, screen_h - 80)}")
-        root.minsize(min(900, screen_w - 24), min(650, screen_h - 80))
+        width, height = root.winfo_screenwidth(), root.winfo_screenheight()
+        root.geometry(f"{min(1060, width-24)}x{min(790, height-84)}")
+        root.minsize(min(580, width-24), min(445, height-84))
+        self.poses = {s["id"]: dict(s, sign=-1, offset=0) for s in STATIONS}
+        self.scans = {}
+        self.active = self.sweep = None
         self.reader = None
         self.connected = False
         self.disconnecting = False
-        self.scans = []
-        self.active = None
-        self.sweep = None
-        self.last_frame_at = 0
+        self.has_marker = False
+        self.ports = []
+        self.last_frame_at = self.next_discovery = 0
         self.timer = None
-        self.demo_seq = 0
-        self.demo_angle = 90
-        self.demo_step = 5
-        self.demo_due = 0
-        self.mode = tk.StringVar(value=REAL)
-        self.session_mode = REAL
-        self.port = tk.StringVar()
-        self.link = tk.StringVar(value="UART 포트를 선택하세요.")
-        self.stage = tk.StringVar()
-        self.action = tk.StringVar()
-        self.hint = tk.StringVar()
-        self.readout = tk.StringVar(value="각도  —       거리  —")
-        self.direction = tk.StringVar(value=CLOCKWISE)
-        self.settings = {key: tk.StringVar() for key in ("x", "y", "heading", "offset")}
-        self.settings["offset"].set("0")
+        self.needs_draw = False
+        self.demo = demo
+        self.demo_seq = self.demo_angle = self.demo_due = 0
+        self.port = tk.StringVar(root)
+        self.link = tk.StringVar(root, "모의 입력" if demo else "포트 검색 중")
+        self.stage = tk.StringVar(root, "PC 숫자 키 1·2·3으로 모의 측정을 시작하세요." if demo else KEY_HINT)
         self._build()
-        self._list_ports()
-        self._prepare()
+        if not demo:
+            self._discover(force=True)
         self._draw()
         self._poll()
         root.protocol("WM_DELETE_WINDOW", self.close)
 
     def _build(self):
-        style = ttk.Style(self.root)
-        style.theme_use("clam")
-        style.configure(".", font=(FONT, 10))
-        style.configure("TButton", padding=(9, 5))
-        style.configure("Accent.TButton", background=ACCENT, foreground="white", padding=(10, 9))
-        style.map("Accent.TButton", background=[("disabled", "#d5dfdb"), ("active", "#07594d")],
-                  foreground=[("disabled", "#50655f")])
-        side = tk.Frame(self.root, bg=BG, padx=18, pady=12)
-        side.pack(side="left", fill="y")
-        panel = tk.Frame(side, bg=BG, width=292)
-        panel.pack(fill="both", expand=True)
+        bar = tk.Menu(self.root)
+        self.root.configure(menu=bar)
+        files = tk.Menu(bar, tearoff=False)
+        bar.add_cascade(label="지도", menu=files)
+        files.add_command(label="SVG 저장…", command=self._save)
+        files.add_command(label="새 지도", command=self._reset)
+        files.add_separator()
+        files.add_command(label="종료", command=self.close)
+        self.port_menu = tk.Menu(bar, tearoff=False, postcommand=self._port_menu)
+        bar.add_cascade(label="연결", menu=self.port_menu)
+        settings = tk.Menu(bar, tearoff=False)
+        bar.add_cascade(label="설정", menu=settings)
+        settings.add_command(label="센서 배치 보정…", command=self._calibrate)
+        settings.add_separator()
+        self.demo_flag = tk.BooleanVar(self.root, self.demo)
+        settings.add_checkbutton(label="모의 입력", variable=self.demo_flag,
+                                 command=lambda: self._set_demo(self.demo_flag.get()))
+        help_menu = tk.Menu(bar, tearoff=False)
+        bar.add_cascade(label="도움말", menu=help_menu)
+        help_menu.add_command(label="모형 배치도", command=self._placement_guide)
+        for number in "123":
+            self.root.bind(f"<KeyPress-{number}>", lambda _e, n=number: self._demo_key(n))
+            self.root.bind(f"<KeyPress-KP_{number}>", lambda _e, n=number: self._demo_key(n))
+
+        footer = tk.Frame(self.root, bg="#eef3f3", padx=14, pady=7)
+        footer.pack(side="bottom", fill="x")
+        tk.Label(footer, textvariable=self.link, bg="#eef3f3", fg="#245858",
+                 font=(FONT, 9, "bold")).pack(side="left", padx=(0, 14))
+        tk.Label(footer, textvariable=self.stage, bg="#eef3f3", fg="#293f49",
+                 font=(FONT, 9), anchor="w", justify="left").pack(side="left", fill="x", expand=True)
         self.map = MapView(self.root)
-        self.map.pack(side="right", fill="both", expand=True)
+        self.map.pack(fill="both", expand=True)
 
-        def label(parent, value, size=10, bold=False, pady=(0, 0)):
-            args = {"textvariable": value} if isinstance(value, tk.Variable) else {"text": value}
-            obj = tk.Label(parent, bg=BG, fg=INK if bold else MUTED, anchor="w",
-                           justify="left", wraplength=298,
-                           font=(FONT, size, "bold" if bold else "normal"), **args)
-            obj.pack(fill="x", pady=pady)
-            return obj
+    def _save(self):
+        if self.needs_draw:
+            self._draw()
+        self.map.save_svg()
 
-        label(panel, "스캔 제어", 18, True, (0, 8))
-        mode_bar = tk.Frame(panel, bg=BG)
-        mode_bar.pack(fill="x")
-        for name in (REAL, DEMO):
-            tk.Radiobutton(mode_bar, text=name, variable=self.mode, value=name,
-                           bg=BG, activebackground=BG, fg=INK, font=(FONT, 10),
-                           command=self._change_mode).pack(side="left", padx=(0, 12))
-        ports = tk.Frame(panel, bg=BG)
-        ports.pack(fill="x", pady=(8, 2))
-        self.ports = ttk.Combobox(ports, width=10, state="readonly", textvariable=self.port)
-        self.ports.pack(side="left", fill="x", expand=True)
-        self.ports.bind("<<ComboboxSelected>>", lambda _event: self._controls())
-        self.refresh = ttk.Button(ports, text="갱신", width=5, command=self._list_ports)
-        self.refresh.pack(side="left", padx=4)
-        self.connect = ttk.Button(ports, text="연결", width=7, command=self._connection)
-        self.connect.pack(side="left")
-        label(panel, self.link, 9)
-        ttk.Separator(panel).pack(fill="x", pady=11)
-        label(panel, self.stage, 14, True)
-        label(panel, self.hint, 10, pady=(4, 7))
-        ttk.Button(panel, text="모형 배치도 보기", command=self._placement_guide).pack(fill="x", pady=(0, 4))
-        grid = tk.Frame(panel, bg=BG)
-        grid.pack(fill="x")
-        self.fields = []
-        for index, (key, name) in enumerate((("x", "X (cm)"), ("y", "Y (cm)"),
-                                              ("heading", "정면 (°)"), ("offset", "앞면 간격 (cm)"))):
-            row, col = divmod(index, 2)
-            cell = tk.Frame(grid, bg=BG)
-            cell.grid(row=row, column=col, sticky="ew", padx=(0, 5), pady=2)
-            grid.columnconfigure(col, weight=1)
-            label(cell, name, 9)
-            field = ttk.Entry(cell, width=10, textvariable=self.settings[key])
-            field.pack(fill="x")
-            self.fields.append(field)
-        label(panel, "서보 명령각이 커질 때의 실제 회전", 9, pady=(6, 1))
-        self.turn = ttk.Combobox(panel, state="readonly", textvariable=self.direction,
-                                 values=(CLOCKWISE, COUNTERCLOCKWISE))
-        self.turn.pack(fill="x")
-        self.record = ttk.Button(panel, style="Accent.TButton", command=self._record_button)
-        self.record.pack(fill="x", pady=(11, 6))
-        self.progress = ttk.Progressbar(panel, maximum=SWEEP_SIZE)
-        self.progress.pack(fill="x")
-        label(panel, self.readout, 10, True, (4, 1))
-        label(panel, self.action, 9)
-        bottom = tk.Frame(panel, bg=BG)
-        bottom.pack(side="bottom", fill="x", pady=(6, 0))
-        self.save = ttk.Button(bottom, text="지도 저장 (SVG)", command=self.map.save_svg)
-        self.save.pack(side="left", fill="x", expand=True)
-        ttk.Button(bottom, text="새 탐색", command=self._reset).pack(side="left", padx=(5, 0))
-
-    def _list_ports(self):
-        try:
-            names = list_ports()
-        except OSError as exc:
-            self.link.set(f"포트 목록을 읽지 못했습니다. {exc}")
-            names = []
-        self.ports.configure(values=names)
-        if self.port.get() not in names:
-            self.port.set(names[0] if len(names) == 1 else "")
-        self._controls()
-
-    def _change_mode(self):
-        if self.mode.get() == self.session_mode:
+    def _reset(self):
+        if (self.active or self.scans) and not messagebox.askyesno(
+                "새 지도", "현재 측정값을 지우고 빈 지도를 열까요?", parent=self.root):
             return
-        if self.active or self.scans:
-            if not messagebox.askyesno("입력 전환", "현재 지도를 지우고 다른 입력으로 전환할까요?",
-                                       parent=self.root):
-                self.mode.set(self.session_mode)
-                return
-        self.session_mode = self.mode.get()
-        if self.reader:
-            self._disconnect()
-        self._clear()
-        self.link.set("모의 거리값으로 실행 중입니다." if self.mode.get() == DEMO
-                      else "UART 포트를 선택하세요.")
-        self._controls()
+        self.scans.clear()
+        self._discard("PC 숫자 키 1·2·3으로 지점을 선택하세요." if self.demo else KEY_HINT)
+        self._draw()
 
-    def _connection(self):
-        if self.reader:
-            self._disconnect()
+    def _discover(self, force=False):
+        self.next_discovery = time.monotonic() + 2
+        if self.reader or self.demo:
+            return
+        try:
+            ports = list_ports()
+        except OSError as exc:
+            self.link.set(f"포트 검색 실패 · {exc}")
+            return
+        # Retry automatically on a new attachment, or when the operator asks.
+        if not force and ports == self.ports:
+            return
+        self.ports = ports
+        if len(ports) == 1:
+            self._connect(ports[0])
+        elif ports:
+            self.link.set("연결 메뉴에서 COM 포트를 선택하세요.")
         else:
-            self.disconnecting = False
-            self.link.set(f"{self.port.get()} 연결 중…")
-            self.reader = SerialReader(self.port.get())
-            self.reader.start()
-        self._controls()
+            self.link.set("USB 직렬 포트 대기")
+
+    def _port_menu(self):
+        menu = self.port_menu
+        menu.delete(0, "end")
+        if self.reader:
+            menu.add_command(label=f"{self.port.get()} 연결 해제", command=self._disconnect,
+                             state="disabled" if self.disconnecting else "normal")
+            return
+        if not self.demo:
+            for port in self.ports:
+                menu.add_command(label=port, command=lambda p=port: self._connect(p))
+            if self.ports:
+                menu.add_separator()
+        menu.add_command(label="포트 다시 검색", command=lambda: self._discover(force=True),
+                         state="disabled" if self.demo else "normal")
+
+    def _connect(self, port):
+        if self.demo or self.reader:
+            return
+        self.port.set(port)
+        self.disconnecting = self.has_marker = False
+        self.link.set(f"{port} 연결 중")
+        self.reader = SerialReader(port)
+        self.reader.start()
 
     def _disconnect(self):
-        self.disconnecting = True
-        self.connected = False
-        self.reader.stop()
-        if self.active:
-            self._discard("연결이 끊겨 현재 꼭짓점의 기록을 취소했습니다. 다시 연결해 기록하세요.")
-        self.link.set("연결을 해제하는 중…")
-        self._controls()
+        if self.reader and not self.disconnecting:
+            self.disconnecting = True
+            self.connected = False
+            self.reader.stop()
+            if not self.demo:
+                self.link.set("연결 해제 중")
+                if self.active:
+                    self._discard("연결 해제 · 진행 중인 측정을 취소했습니다.")
 
-    def _controls(self):
-        demo = self.mode.get() == DEMO
-        free_port = not demo and self.reader is None
-        self.ports.configure(state="readonly" if free_port else "disabled")
-        self.refresh.configure(state="normal" if free_port else "disabled")
-        self.connect.configure(text="해제" if self.reader else "연결",
-                               state="normal" if not demo and not self.disconnecting and
-                               (self.reader or self.port.get()) else "disabled")
-        finished = len(self.scans) == len(STATIONS)
-        editable = not finished and self.active is None
-        for widget in self.fields:
-            widget.configure(state="normal" if editable else "disabled")
-        self.turn.configure(state="readonly" if editable else "disabled")
-        text = "현재 스캔 취소" if self.active else ("탐색 완료" if finished else
-               f"{STATIONS[len(self.scans)]['id']} 기록 시작")
-        self.record.configure(text=text, state="normal" if not finished and
-                              (demo or self.connected) else "disabled")
-        self.save.configure(state="normal" if self.scans or self.active else "disabled")
+    def _set_demo(self, value):
+        if value == self.demo:
+            return
+        if (self.scans or self.active) and not messagebox.askyesno(
+                "입력 전환", "현재 지도를 지우고 입력을 바꿀까요?", parent=self.root):
+            self.demo_flag.set(self.demo)
+            return
+        self._disconnect()
+        self.demo = bool(value)
+        self.demo_flag.set(self.demo)
+        self.scans.clear()
+        self._discard("PC 숫자 키 1·2·3으로 지점을 선택하세요." if self.demo else KEY_HINT)
+        self.link.set("모의 입력" if self.demo else "USB 직렬 포트 대기")
+        self.ports = []
+        if not self.demo:
+            self._discover(force=True)
+        self._draw()
 
-    def _prepare(self):
-        count = len(self.scans)
-        self.progress["value"] = 0
-        self.readout.set("각도  —       거리  —")
-        if count < len(STATIONS):
-            station = STATIONS[count]
-            for key in ("x", "y", "heading"):
-                self.settings[key].set(str(station[key]))
-            self.stage.set(f"{station['id']} 배치   ·   {count}/3 완료")
-            corner = ("오른쪽 위", "오른쪽 아래", "왼쪽 아래")[count]
-            arrow = ("왼쪽 아래 ↙", "왼쪽 위 ↖", "오른쪽 위 ↗")[count]
-            self.hint.set(f"모형 {corner}의 통로 중심에 축을 놓으세요. 기본 정면은 {arrow}입니다.")
-            self.action.set("고정한 뒤 기록을 시작하세요. 이동 중에는 기록이 멈춥니다.")
-        else:
-            self.stage.set("탐색 완료   ·   3/3")
-            self.hint.set("세 꼭짓점에서 모은 반사점이 한 지도에 표시됩니다.")
-            self.progress["value"] = SWEEP_SIZE
-            self.action.set("현재 지도를 SVG 파일로 저장할 수 있습니다.")
-        self._controls()
+    def _calibrate(self):
+        win = tk.Toplevel(self.root)
+        win.title("센서 배치 보정")
+        win.transient(self.root)
+        panel = ttk.Frame(win, padding=14)
+        panel.pack()
+        for col, heading in enumerate(("지점", "X (cm)", "Y (cm)", "정면 (°)", "앞면 간격 (cm)", "회전 방향")):
+            ttk.Label(panel, text=heading).grid(row=0, column=col, padx=4)
+        fields = {}
+        for row, (sid, pose) in enumerate(self.poses.items(), 1):
+            ttk.Label(panel, text=sid).grid(row=row, column=0)
+            values = {}
+            for col, key in enumerate(("x", "y", "heading", "offset"), 1):
+                values[key] = tk.StringVar(win, str(pose[key]))
+                ttk.Entry(panel, textvariable=values[key], width=8).grid(row=row, column=col, padx=3, pady=3)
+            values["turn"] = tk.StringVar(win, CLOCKWISE if pose["sign"] == -1 else COUNTERCLOCKWISE)
+            ttk.Combobox(panel, textvariable=values["turn"], values=(CLOCKWISE, COUNTERCLOCKWISE),
+                         state="readonly", width=11).grid(row=row, column=5, padx=3)
+            fields[sid] = values
+
+        def apply():
+            poses = {}
+            try:
+                for sid, values in fields.items():
+                    pose = {k: float(values[k].get()) for k in ("x", "y", "heading", "offset")}
+                    if not (all(math.isfinite(v) for v in pose.values()) and
+                            0 <= pose["x"] <= BOARD_WIDTH_CM and 0 <= pose["y"] <= BOARD_HEIGHT_CM and
+                            0 <= pose["heading"] < 360 and pose["offset"] >= 0):
+                        raise ValueError
+                    poses[sid] = dict(pose, id=sid, sign=-1 if values["turn"].get() == CLOCKWISE else 1)
+            except ValueError:
+                messagebox.showerror("설치값 확인", f"{sid}의 X는 0–55 cm, Y는 0–40 cm, 정면은 0° 이상 "
+                                     "360° 미만, 앞면 간격은 0 이상의 cm 값이어야 합니다.", parent=win)
+                return
+            self.poses = poses
+            win.destroy()
+        ttk.Label(panel, text="변경한 배치는 다음 측정부터 적용합니다.").grid(row=4, column=0, columnspan=5, sticky="w")
+        ttk.Button(panel, text="적용", command=apply).grid(row=4, column=5, pady=(7, 0))
+        win.grab_set()
 
     def _placement_guide(self):
-        window = tk.Toplevel(self.root)
-        window.title("스티로폼 모형 · 꼭짓점 배치도")
+        win = tk.Toplevel(self.root)
+        win.title("모형 배치도 · K1, K2, K3")
         try:
-            diagram = tk.PhotoImage(file=str(Path(__file__).with_name("stations.png")))
+            image = tk.PhotoImage(file=str(Path(__file__).with_name("stations.png")))
         except tk.TclError as exc:
-            window.destroy()
+            win.destroy()
             messagebox.showerror("배치도 열기 실패", str(exc), parent=self.root)
             return
-        # Keep the original labels legible on laptop and high-DPI screens.
-        ratio = max(diagram.width() / max(1, self.root.winfo_screenwidth() - 60),
-                    diagram.height() / max(1, self.root.winfo_screenheight() - 110))
-        divisor = max(3, math.ceil(3 * ratio))
-        window.diagram = diagram.zoom(3).subsample(divisor) if ratio > 1 else diagram
-        tk.Label(window, image=window.diagram, borderwidth=0).pack()
-
-    def _record_button(self):
-        if self.active:
-            self._discard("현재 꼭짓점의 기록을 취소했습니다. 고정 후 다시 시작하세요.")
-            return
-        if self.reader:
-            # Consume queued transport events while the station is still disarmed.
-            self._events()
-        if self.mode.get() == REAL and not self.connected:
-            return
-        if len(self.scans) >= len(STATIONS):
-            return
-        try:
-            pose = {key: float(var.get()) for key, var in self.settings.items()}
-            if not (all(math.isfinite(v) for v in pose.values())
-                    and 0 <= pose["x"] <= BOARD_WIDTH_CM and 0 <= pose["y"] <= BOARD_HEIGHT_CM
-                    and 0 <= pose["heading"] < 360 and pose["offset"] >= 0):
-                raise ValueError
-        except ValueError:
-            messagebox.showerror("설치값 확인", "X는 0–55 cm, Y는 0–40 cm, 정면은 0° 이상 360° 미만, "
-                                 "앞면 간격은 0 이상의 cm 값으로 입력하세요.", parent=self.root)
-            return
-        sid = STATIONS[len(self.scans)]["id"]
-        self.active = dict(pose, id=sid, samples={},
-                           sign=-1 if self.direction.get() == CLOCKWISE else 1)
-        self.sweep = Sweep()
-        self.stage.set(f"{sid} 기록 중   ·   {len(self.scans)}/3 완료")
-        self.hint.set("한쪽 끝에서 반대쪽 끝까지 스캔할 동안 센서 받침을 고정하세요.")
-        self.action.set("첫 거리 프레임을 기다리는 중입니다.")
-        self.last_frame_at = time.monotonic()
-        self.progress["value"] = 0
-        self._draw()
-        self._controls()
+        ratio = max(image.width() / max(1, self.root.winfo_screenwidth() - 60),
+                    image.height() / max(1, self.root.winfo_screenheight() - 110))
+        win.diagram = image.zoom(3).subsample(math.ceil(3 * ratio)) if ratio > 1 else image
+        tk.Label(win, image=win.diagram, borderwidth=0).pack()
 
     def _discard(self, notice):
         self.active = self.sweep = None
-        self.stage.set(f"{STATIONS[len(self.scans)]['id']} 대기   ·   {len(self.scans)}/3 완료")
-        self.hint.set("센서의 위치와 정면을 확인한 뒤 다시 기록하세요.")
-        self.readout.set("각도  —       거리  —")
-        self.progress["value"] = 0
-        self.action.set(notice)
-        self._draw()
-        self._controls()
+        self.stage.set(notice)
+        self.needs_draw = True
 
-    def _line(self, line):
-        if self.active is None:
+    def _line(self, raw):
+        line = raw.rstrip("\r\n")
+        if line == "READY":
+            if self.active:
+                self._discard("측정이 끝나기 전에 키트가 대기로 돌아왔습니다. 키를 다시 누르세요.")
+            elif not self.has_marker:
+                self.stage.set(KEY_HINT)
+            self.has_marker = True
             return
-        complete = self.sweep.feed(line)
-        frame = parse_scan(line)
-        if frame is None:
+        calibration = re.fullmatch(r"CAL,(0|90|180),([0-9]{1,5})", line)
+        if calibration:
+            self.has_marker = True
+            self._discard(f"서보 {calibration[1]}° 보정 · {calibration[2]} µs")
             return
-        _, angle, distance = frame
-        self.last_frame_at = time.monotonic()
-        self.active["samples"][angle] = distance
-        self.active["live_angle"] = angle
-        self.active["live_mm"] = distance
-        reading = "무응답" if distance == -1 else f"{distance / 10:g} cm"
-        self.readout.set(f"각도  {angle}°       거리  {reading}")
-        n = self.sweep.progress
-        self.progress["value"] = n
-        self.action.set(f"한 방향 스캔 {n}/{SWEEP_SIZE} · 반사점을 갱신 중입니다." if n else
-                        "실시간 표시 중 · 스캔이 0° 또는 180°에 도달하면 한 회 기록을 시작합니다.")
-        if complete:
+        calibration_done = re.fullmatch(r"CAL,DONE,([0-9]{1,5}),([0-9]{1,5}),([0-9]{1,5})", line)
+        if calibration_done:
+            self.has_marker = True
+            self._discard("서보 보정 완료 · 0° / 90° / 180° = "
+                          + " / ".join(calibration_done.groups()) + " µs")
+            return
+        if line == "CAL,VOLATILE":
+            self.has_marker = True
+            self._discard("서보 보정값은 이번 전원 주기에만 적용됩니다. 플래시 저장을 확인하세요.")
+            return
+        kind, _, sid = line.partition(",")
+        if kind == "BEGIN" and sid in self.poses:
+            self.has_marker = True
+            self.active = dict(self.poses[sid], samples={}, active=True)
+            self.sweep = Sweep()
+            self.last_frame_at = time.monotonic()
+            self.stage.set(f"{sid} 측정 중 · 0/{SWEEP_SIZE}")
+            self.needs_draw = True
+            return
+        if not self.active:
+            if not self.has_marker and parse_scan(line) is not None:
+                self.stage.set("지점 시작 신호 대기 · 키패드용 펌웨어에서 1·2·3을 누르세요.")
+            return
+        station = self.active["id"]
+        if kind == "END" and sid == station and self.sweep.complete:
             if all(mm == -1 for mm in self.sweep.samples.values()):
-                self._discard("모든 각도가 무응답입니다. 센서와 벽 높이를 확인하고 다시 기록하세요.")
+                self._discard(f"{station} 무응답 · 같은 키를 눌러 다시 측정하세요.")
                 return
-            self.active["samples"] = self.sweep.samples.copy()
-            del self.active["live_angle"], self.active["live_mm"]
-            self.scans.append(self.active)
-            self.active = self.sweep = None
-            self._prepare()
+            # Calibration can be edited during a run: keep the pose latched at BEGIN.
+            self.scans[station] = {key: self.active[key] for key in self.poses[station]}
+            self.scans[station]["samples"] = self.sweep.samples.copy()
+            self._discard(f"{station} 완료 · {len(self.scans)}/3 지점")
+            return
+        frame = parse_scan(line)
+        previous = self.sweep.progress
+        if frame is None or self.sweep.complete:
+            self._discard(f"{station} 측정 중단 · 시작·종료 신호 또는 데이터를 다시 확인하세요.")
+            return
+        self.sweep.feed(line)
+        if self.sweep.progress != previous + 1:
+            self._discard(f"{station} 측정 누락 · 같은 키를 눌러 다시 측정하세요.")
+            return
+        _, angle, mm = frame
+        self.last_frame_at = time.monotonic()
+        self.active.update(samples=self.sweep.samples, live_angle=angle, live_mm=mm)
+        distance = "무응답" if mm == -1 else f"{mm / 10:g} cm"
+        self.stage.set(f"{station} 측정 중 · {self.sweep.progress}/{SWEEP_SIZE}    {angle}° · {distance}")
         self.needs_draw = True
 
     def _draw(self):
-        scans = self.scans + ([self.active] if self.active is not None else [])
-        self.map.set_scans(scans, simulated=self.mode.get() == DEMO)
+        visible = list(self.scans.values())
+        if self.active:
+            visible.append(self.active)
+        self.map.set_scans(visible, simulated=self.demo)
         self.needs_draw = False
 
     def _events(self):
-        if not self.reader:
-            return
-        while True:
+        while self.reader:
             try:
                 kind, value = self.reader.events.get_nowait()
             except queue.Empty:
                 break
-            if kind == "line":
-                if self.connected and self.mode.get() == REAL:
-                    self._line(value)
-            elif kind == "connected":
-                if not self.disconnecting:
-                    self.connected = True
-                    self.link.set(f"{value} 연결됨 · 115200 8N1")
-                self._controls()
+            if kind == "line" and self.connected and not self.demo:
+                self._line(value)
+            elif kind == "connected" and not self.disconnecting and not self.demo:
+                self.connected = True
+                self.link.set(f"{value} · 115200 8N1")
+                self.stage.set(KEY_HINT)
             elif kind == "error":
                 self.connected = False
-                if self.mode.get() == REAL:
+                if not self.demo:
                     self.link.set(value)
                     if self.active:
-                        self._discard("수신이 끊겼습니다. 연결 후 이 꼭짓점을 다시 기록하세요.")
+                        self._discard("수신 중단 · 같은 위치에서 키를 눌러 다시 측정하세요.")
             elif kind == "closed":
-                if self.disconnecting and self.mode.get() == REAL:
-                    self.link.set("연결이 해제됐습니다.")
+                if not self.demo:
+                    if self.active:
+                        self._discard("연결 해제 · 진행 중인 측정을 취소했습니다.")
+                    if self.connected or self.disconnecting:
+                        self.link.set("연결 해제")
                 self.reader = None
                 self.connected = self.disconnecting = False
-                self._controls()
                 break
+
+    def _demo_key(self, digit):
+        if self.demo and not self.active and f"K{digit}" in self.poses:
+            self.demo_angle = self.demo_due = 0
+            self._line(f"BEGIN,K{digit}")
 
     def _poll(self):
         self._events()
         now = time.monotonic()
-        if self.mode.get() == DEMO and self.active and now >= self.demo_due:
-            self.demo_due = now + 0.065
-            mm = demo_distance(self.active, self.demo_angle)
-            self._line(f"SCAN,{self.demo_seq},{int(20 <= mm <= 300)},{self.demo_angle},{mm}")
+        if self.demo and self.active and now >= self.demo_due:
+            self.demo_due = now + .065
+            angle = self.demo_angle
+            mm = demo_distance(self.active, angle)
+            self._line(f"SCAN,{self.demo_seq},{int(20 <= mm <= 300)},{angle},{mm}")
             self.demo_seq = (self.demo_seq + 1) % 65536
-            if self.demo_angle in (0, 180):
-                self.demo_step = 5 if self.demo_angle == 0 else -5
-            self.demo_angle += self.demo_step
+            self.demo_angle += 5
+            if angle == 180 and self.active:
+                self._line(f"END,{self.active['id']}")
         if self.active and now - self.last_frame_at > 5:
-            self.action.set("5초간 정상 프레임이 없습니다. SweepScan.dfu, UART 배선과 COM 포트를 확인하세요.")
+            self._discard("5초간 프레임이 없어 측정을 취소했습니다. UART 연결 후 다시 측정하세요.")
+        if not self.demo and self.reader is None and now >= self.next_discovery:
+            self._discover()
         if self.needs_draw:
             self._draw()
         self.timer = self.root.after(35, self._poll)
-
-    def _clear(self):
-        self.scans.clear()
-        self.active = self.sweep = None
-        self._prepare()
-        self._draw()
-
-    def _reset(self):
-        if (self.scans or self.active) and not messagebox.askyesno(
-                "새 탐색", "현재 지도를 지우고 K1부터 다시 측정할까요?", parent=self.root):
-            return
-        self._clear()
 
     def close(self):
         if self.timer:
@@ -382,6 +365,6 @@ class Mapper:
 
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    Mapper(root)
-    root.mainloop()
+    window = tk.Tk()
+    Mapper(window)
+    window.mainloop()

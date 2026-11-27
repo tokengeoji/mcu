@@ -18,7 +18,6 @@ BORDER = "#95aba8"
 REFLECTION = "#137768"
 STATION = "#394b78"
 PLANNED = "#75838a"
-NEXT = "#42577a"
 LIVE = "#ac692e"
 FONT = "Malgun Gothic"
 
@@ -104,28 +103,29 @@ def _draw_plot(pen, width, height, stations, points, beam, show_planned=False):
     if show_planned:
         placed = {s[0] for s in stations}
         pending = [s for s in STATIONS if s["id"] not in placed]
-        for index, s in enumerate(pending):
-            markers.append((s["id"], s["x"], s["y"], s["heading"], "next" if index == 0 else "planned"))
-    markers.extend((*station, "placed") for station in stations)
+        for s in pending:
+            markers.append((s["id"], s["x"], s["y"], s["heading"], "planned"))
+    markers.extend(stations)
     for name, x, y, heading, state in markers:
         px, py = left + x*scale, bottom - y*scale
         angle = math.radians(heading)
         dx, dy = math.cos(angle), -math.sin(angle)
         tip_x, tip_y = px + 19*dx, py + 19*dy
-        color = {"next": NEXT, "planned": PLANNED, "placed": STATION}[state]
+        color = {"active": LIVE, "planned": PLANNED, "saved": STATION}[state]
         weight = 1 if state == "planned" else 2
         pen.line(px, py, tip_x, tip_y, color, weight)
         for side in (-1, 1):
             pen.line(tip_x, tip_y, tip_x-6*dx-side*3*dy, tip_y-6*dy+side*3*dx, color, weight)
-        if state == "placed":
+        if state != "planned":
             pen.dot(px, py, 4.5, "white", color)
-            label_x = px-8 if x > BOARD_WIDTH_CM-5 else px+8
+            if state == "active":
+                pen.dot(px, py, 7.5, "", color)
+                name += " · 기록 중"
+            label_x = px-9 if x > BOARD_WIDTH_CM-10 else px+9
         else:
             pen.line(px-5, py, px+5, py, color, weight)
             pen.line(px, py-5, px, py+5, color, weight)
             name = f"{name} ({x:g}, {y:g})"
-            if state == "next":
-                name += " · 다음"
             label_x = px-9 if x > BOARD_WIDTH_CM/2 else px+9
         label_y = py+11 if dy < 0 or y > BOARD_HEIGHT_CM-4 else py-11
         pen.text(label_x, label_y, name, color, 13, "e" if label_x < px else "w", state != "planned")
@@ -155,7 +155,7 @@ class MapView(tk.Frame):
         legend = tk.Frame(self, background="white")
         legend.pack(fill="x", padx=18, pady=(2, 12))
         for label, color in [("● 반사점", REFLECTION), ("◎ 현재 반사", LIVE), ("+ 배치 예정", PLANNED),
-                             ("○ 센서 · 화살표는 정면", STATION),
+                             ("○ 기록 완료", STATION), ("↗ 센서 정면", MUTED),
                              ("빈 곳은 미확인", MUTED)]:
             tk.Label(legend, text=label, bg="white", fg=color, font=(FONT, 10),
                      anchor="w").pack(side="left", padx=(0, 14))
@@ -166,7 +166,15 @@ class MapView(tk.Frame):
         """Display the current samples. A station may have no samples yet."""
         scans = list(scans)
         self._points = [(p["x"], p["y"]) for p in map_points(scans)]
-        self._stations = [(s["id"], s["x"], s["y"], s["heading"]) for s in scans]
+        # While retaking a station, its saved points may remain until the new sweep
+        # completes. Draw one pose marker, preferring the ongoing capture.
+        poses = {}
+        for s in scans:
+            active = s.get("active", False) or "live_angle" in s
+            if active or s["id"] not in poses:
+                poses[s["id"]] = (s["id"], s["x"], s["y"], s["heading"],
+                                  "active" if active else "saved")
+        self._stations = list(poses.values())
         self._beam = None
         for scan in scans:
             if "live_angle" in scan and "live_mm" in scan:
@@ -219,8 +227,9 @@ class MapView(tk.Frame):
         _draw_plot(_SvgPen(plot), 800, 552, self._stations, self._points, self._beam)
         header.text(25, 650, "● 반사점", REFLECTION, 15, "w")
         header.text(117, 650, "◎ 현재 반사", LIVE, 15, "w")
-        header.text(233, 650, "○ 센서 · 화살표는 정면", STATION, 15, "w")
-        header.text(431, 650, "빈 곳은 미확인", MUTED, 15, "w")
+        header.text(233, 650, "○ 기록 완료", STATION, 15, "w")
+        header.text(350, 650, "↗ 센서 정면", MUTED, 15, "w")
+        header.text(470, 650, "빈 곳은 미확인", MUTED, 15, "w")
         try:
             ET.ElementTree(svg).write(path, encoding="utf-8", xml_declaration=True)
         except OSError as error:
