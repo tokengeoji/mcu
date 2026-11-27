@@ -71,7 +71,7 @@
   </g>
   <g stroke="#fff" stroke-width="2">
     <circle cx="155" cy="274" r="6.5" fill="#2e6396"/><circle cx="155" cy="370" r="6.5" fill="#80568f"/>
-    <circle cx="155" cy="402" r="6.5" fill="#226e87"/><circle cx="166" cy="402" r="6.5" fill="#6d6137"/>
+    <circle cx="155" cy="402" r="6.5" fill="#d56a00"/><circle cx="166" cy="402" r="6.5" fill="#6d6137"/>
     <circle cx="633" cy="402" r="6.5" fill="#006d65"/>
   </g>
   <g class="pin" text-anchor="end">
@@ -123,7 +123,7 @@
 
   <rect x="40" y="587" width="1040" height="56" rx="6" fill="#e7eff0"/>
   <text x="58" y="622" class="body">PA0 ← ECHO</text><text x="247" y="622" class="body">PC8 → TRIG</text>
-  <text x="416" y="622" class="body">PA8 → SG90</text><text x="582" y="622" class="body">PA6 → PIEZO</text>
+  <text x="416" y="622" class="body">PA8 → 서보 주황선</text><text x="582" y="622" class="body">PA6 → PIEZO</text>
   <text x="768" y="622" class="body">PB10 → 키트 TX0 (선택)</text>
 
   <text x="40" y="699" class="section">센서 한 개를 브레드보드에 연결</text>
@@ -165,6 +165,6 @@
     <g fill="#2e6396"><circle cx="436" cy="933" r="6"/><circle cx="604" cy="933" r="6"/></g>
     <g fill="#344955"><circle cx="380" cy="982" r="6"/><circle cx="604" cy="982" r="6"/></g>
   </g>
-  <text x="40" y="1052" class="sm">서보에는 별도 정격 전원을 공급한다. 서보 전원 −, 센서 전원 −와 J5 4번은 같은 GND 레일에 연결한다.</text>
+  <text x="40" y="1052" class="sm">SG90 빨간색은 서보용 별도 전원 +에 연결한다. 갈색은 서보 전원 −, 센서 전원 −, J5 4번과 같은 GND 레일에 꽂는다.</text>
   <text x="40" y="1081" class="sm">소켓 위치 근거 · 실험1-GPIO-InputOutput 교재 20쪽 보드 사진·소켓 표, 21쪽 J5 회로도</text>
 </svg>

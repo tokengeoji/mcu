@@ -6,7 +6,15 @@ SG90 서보 위에 HC-SR04P 초음파 센서 한 개를 올려 좌우로 스캔�
 
 ## 배선
 
-전원을 끈 상태에서 센서와 서보의 전원선을 먼저 구분한다. 그림의 화살표는 신호 방향이다. [배선도 크게 보기](docs/wiring.svg) · [소켓·브레드보드 확대도](docs/socket-guide.svg) · [팀 원본 배선도 PDF](docs/wiring.pdf)
+**SG90 서보의 세 가닥**은 전원을 끄고 아래 표대로 연결한다. [SG90 선 색상 배선 사양](https://tams.informatik.uni-hamburg.de/lehre/2019ss/vorlesung/es/doc/sg90.pdf)
+
+| 서보 선 색 | 역할 | 이 키트에서 연결할 곳 |
+| --- | --- | --- |
+| **갈색** | GND (−) | 브레드보드 공통 GND 레일. **서보 전원 −**와 **STM32 J5 4번**도 이 레일에 연결 |
+| **빨간색** | VCC (+) | **서보용 별도 정격 전원 +**. 센서용 3.3 V 레일과 분리 |
+| **주황색** | 제어 신호 (PWM) | **STM32 PA8** · J3 왼쪽 열 (1-L) |
+
+그림의 화살표는 신호 방향이다. [배선도 크게 보기](docs/wiring.svg) · [소켓·브레드보드 확대도](docs/socket-guide.svg) · [인쇄용 배선도 PDF](docs/wiring.pdf)
 
 ![서보 위 센서 장착, STM32 신호 방향, 개별 전원과 공통 접지](docs/wiring.svg)
 
@@ -14,11 +22,11 @@ SG90 서보 위에 HC-SR04P 초음파 센서 한 개를 올려 좌우로 스캔�
 | --- | --- | --- |
 | PC8 · J4 왼쪽 열 | HC-SR04P TRIG | STM32가 12 µs 측정 시작 펄스 출력 |
 | PA0 · J3 왼쪽 열 | HC-SR04P ECHO | 센서가 보낸 펄스 폭을 TIM2로 측정 |
-| PA8 · J3 왼쪽 열 | SG90 Signal | TIM1이 20 ms 주기로 서보 위치 명령 |
+| PA8 · J3 왼쪽 열 | SG90 주황색 (Signal) | TIM1이 20 ms 주기로 서보 위치 명령 |
 | PA6 · J3 왼쪽 열 | 키트 PIEZO 입력 | 감지 중 약 1,024 Hz |
 | 센서용 3.3 V 정전압 전원 + | HC-SR04P VCC | 3.3 V 구동형 센서 기준 |
-| 서보용 별도 정격 전원 + | SG90 V+ | 지급품 정격과 구동 전류에 맞춰 공급 |
-| STM32 J5 4번 GND | 센서·서보 GND, 두 전원 음극 | 브레드보드의 같은 접지 레일로 연결 |
+| 서보용 별도 정격 전원 + | SG90 빨간색 (VCC) | 지급품 정격과 구동 전류에 맞춰 공급 |
+| STM32 J5 4번 GND | SG90 갈색 (GND), 센서 GND, 두 전원 음극 | 브레드보드의 같은 접지 레일로 연결 |
 | PB10 · J3 오른쪽 열 (선택) | 키트 UART 모듈 **TX0** | PC로 측정 로그 전송. 일반 3.3 V USB–TTL 어댑터는 RX와 공통 GND 사용 |
 
 빨간 RESET 버튼을 오른쪽 아래에 두고 J3·J4 소켓의 기판 인쇄를 읽는다. 두 외부 전원의 양극은 분리한다. 센서 ECHO의 HIGH가 3.3 V인지 확인한 뒤 PA0에 연결한다. 5 V 출력형은 레벨 변환이 필요하다. TowerPro SG90 Digital의 공칭 전압은 4.8 V다. [STM32 데이터시트](https://www.st.com/resource/en/datasheet/stm32f103rb.pdf) · [SG90 제조사 사양](https://towerpro.com.tw/product/sg90-7/)
