@@ -4,6 +4,10 @@ SG90 서보 위에 HC-SR04P 초음파 센서 한 개를 올려 좌우로 스캔�
 
 [90° 정렬용 DFU 다운로드](https://github.com/tokengeoji/mcu/raw/refs/heads/dev/firmware/SweepCenter.dfu) · [스캔용 DFU 다운로드](https://github.com/tokengeoji/mcu/raw/refs/heads/dev/firmware/SweepScan.dfu) · [IAR 프로젝트](stm32/SweepScan.eww) · [팀 노션의 설계 원문](https://app.notion.com/p/4253c6661b7d8149a666e968a2ce0bc0)
 
+## PC에서 실시간 지도 보기
+
+`C:\mcu_project\project`에서 `.\pc_mapper\start-mapper.cmd`를 실행한다. Windows GUI에서 UART 포트를 연결하고, 스티로폼 모형의 K1 → K2 → K3에 센서를 차례로 고정해 기록한다. 각도별 반사점이 들어오는 즉시 같은 지도에 쌓인다. 각 꼭짓점의 스캔이 끝나면 GUI가 기록을 멈추므로 그때 다음 위치로 옮긴다. 보드 없이 **모의 측정**으로도 확인할 수 있다. [실행·꼭짓점 정렬 안내와 GUI 화면](pc_mapper/README.md)
+
 ## 배선
 
 **SG90 서보의 세 가닥**은 전원을 끄고 아래 표대로 연결한다. [SG90 선 색상 배선 사양](https://tams.informatik.uni-hamburg.de/lehre/2019ss/vorlesung/es/doc/sg90.pdf)

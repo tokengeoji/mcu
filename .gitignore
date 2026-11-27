@@ -20,3 +20,4 @@ build/
 .vs/
 .vscode/
 Thumbs.db
+__pycache__/
