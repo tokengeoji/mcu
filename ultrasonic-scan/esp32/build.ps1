@@ -1,0 +1,94 @@
+param(
+    [string]$ArduinoCli = 'arduino-cli',
+    [string]$ConfigFile,
+    [string]$UploadPort,
+    [switch]$PrepareIde
+)
+$ErrorActionPreference = 'Stop'
+$revision = 'd5ed3b777bedb9b407ccff09dc810a9248eb7926'
+$raw = "https://raw.githubusercontent.com/gooddisplayshare/ESP32epdx/$revision"
+$work = Join-Path $PSScriptRoot '.build'
+$cache = Join-Path $work $revision
+$sketch = Join-Path $work 'ScanDisplay'
+$lib = Join-Path $work 'libraries/ESP32epdx'
+$panel = 'examples/2-Colors (BW)/7.5/GDEY075T7'
+$null = New-Item -ItemType Directory -Force $cache,$sketch,$lib
+
+function Copy-Upstream([string]$Path, [string]$Destination) {
+    $saved = Join-Path $cache $Path
+    $null = New-Item -ItemType Directory -Force (Split-Path $saved),(Split-Path $Destination)
+    if (!(Test-Path -LiteralPath $saved)) {
+        $url = $raw + '/' + (($Path.Split('/') | ForEach-Object {[uri]::EscapeDataString($_)}) -join '/')
+        $tempFile = "$saved.part"
+        Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $tempFile
+        Move-Item -Force -LiteralPath $tempFile -Destination $saved
+    }
+    Copy-Item -Force -LiteralPath $saved -Destination $Destination
+}
+
+$libraryFiles = @('library.properties', 'src/ESP32epdx.h', 'src/ESP32epdx.cpp',
+    'src/EPD_SPI.h', 'src/EPD_SPI.cpp', 'src/GUI/GUI_Paint.h', 'src/GUI/GUI_Paint.cpp',
+    'src/GUI/fonts.h', 'src/GUI/font8.cpp', 'src/GUI/font12.cpp', 'src/GUI/font16.cpp',
+    'src/GUI/font20.cpp', 'src/GUI/font24.cpp')
+foreach ($file in $libraryFiles) { Copy-Upstream $file (Join-Path $lib $file) }
+foreach ($file in @('EPD.cpp','EPD.h')) { Copy-Upstream "$panel/$file" (Join-Path $sketch $file) }
+
+# Apply only the documented integration fixes to this specific upstream driver.
+# Fail if it has unexpected contents (including an incomplete earlier download).
+$driverFile = Join-Path $sketch 'EPD.cpp'
+$driver = [IO.File]::ReadAllText($driverFile)
+if ($driver -notmatch 'unsigned char PartImage\[1000\];' -or
+    $driver -notmatch 'void lcd_chkstatus\(void\)' -or
+    $driver -notmatch 'x_end%256-1' -or $driver -notmatch 'y_end%256-1') {
+    throw 'Unexpected Good Display driver. Remove the cached EPD.cpp and rebuild.'
+}
+$driver = $driver.Replace('unsigned char PartImage[1000];', 'extern unsigned char *PartImage;')
+$start = $driver.IndexOf('void lcd_chkstatus(void)')
+$end = $driver.IndexOf('//Full screen update initialization', $start)
+if ($end -lt 0) { throw 'Unsupported BUSY function boundary' }
+$driver = $driver.Substring(0,$start) + "extern bool panelReady();`n" + $driver.Substring($end)
+$driver = $driver.Replace('lcd_chkstatus();','if (!panelReady()) return;')
+# Let POWER OFF assert BUSY before polling and entering deep sleep.
+$powerOff = '(?im)^([ \t]*EPD_W21_WriteCMD\(0x02\);[ \t]*//power off[ \t]*\r?\n)([ \t]*if \(!panelReady\(\)\) return;)'
+if ([regex]::Matches($driver, $powerOff).Count -ne 1) {
+    throw 'Unexpected Good Display power-off sequence.'
+}
+$driver = [regex]::Replace($driver, $powerOff, ('$1' + '    delay_xms(100);' + [Environment]::NewLine + '$2'))
+# The example already calculates the inclusive last pixel as start + size - 1.
+$driver = $driver.Replace('x_end%256-1','x_end%256').Replace('y_end%256-1','y_end%256')
+[IO.File]::WriteAllText($driverFile,$driver,[Text.UTF8Encoding]::new($false))
+
+Copy-Item -Force (Join-Path $PSScriptRoot 'ScanDisplay/*') $sketch
+if ($PrepareIde) {
+    $ideRoot = Join-Path $PSScriptRoot 'ArduinoIDE'
+    $ideSketch = Join-Path $ideRoot 'ScanDisplay'
+    # A sketch already opened and edited in the IDE belongs to its user.
+    if (Test-Path -LiteralPath $ideSketch) {
+        $ideSketch = Join-Path $ideRoot ((Get-Date -Format 'yyyyMMdd-HHmmss-fffffff') + '/ScanDisplay')
+    }
+    $null = New-Item -ItemType Directory -Path $ideSketch -Force
+    Copy-Item -Path (Join-Path $sketch '*') -Destination $ideSketch
+    # Arduino IDE recursively compiles libraries bundled in a sketch's src folder.
+    $ideSrc = New-Item -ItemType Directory -Path (Join-Path $ideSketch 'src')
+    Copy-Item -Recurse -LiteralPath (Join-Path $lib 'src') -Destination (Join-Path $ideSrc.FullName 'ESP32epdx')
+    foreach ($entry in @(@('panel.cpp', 'ESP32epdx.h'), @('EPD.cpp', 'EPD_SPI.h'))) {
+        $path = Join-Path $ideSketch $entry[0]
+        $header = $entry[1]
+        $source = [IO.File]::ReadAllText($path)
+        $localInclude = '"src/ESP32epdx/' + $header + '"'
+        [IO.File]::WriteAllText($path, $source.Replace("<$header>", $localInclude), [Text.UTF8Encoding]::new($false))
+    }
+    Write-Output (Join-Path $ideSketch 'ScanDisplay.ino')
+    return
+}
+$options = @()
+if ($ConfigFile) { $options += @('--config-file',$ConfigFile) }
+$fqbn = 'esp32:esp32:esp32'
+$bin = Join-Path $work 'bin'
+& $ArduinoCli compile @options --fqbn $fqbn --libraries (Join-Path $work 'libraries') --output-dir $bin $sketch
+if ($LASTEXITCODE -ne 0) { throw "Arduino compile failed ($LASTEXITCODE)" }
+if ($UploadPort) {
+    & $ArduinoCli upload @options --fqbn $fqbn --port $UploadPort --input-dir $bin $sketch
+    if ($LASTEXITCODE -ne 0) { throw "Arduino upload failed ($LASTEXITCODE)" }
+}
+
