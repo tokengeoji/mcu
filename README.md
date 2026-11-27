@@ -1,4 +1,8 @@
-# 2조 위험구역 작업자 추적 관제실
+# SAVE · 위험구역 작업자 추적 관제실 v6
+
+**현재 진행 주제: 기존 SAVE 프로젝트 재개 · 2026-11-27**
+
+STM32를 메인 제어기로, ESP32-L을 e-Ink 표시 전용으로 사용하는 기존 SAVE 프로젝트를 이어서 진행한다. 작업 기준은 루트의 [`stm32/`](stm32/), [`esp32/`](esp32/), [`docs/`](docs/)다.
 
 한 개의 모형 작업자가 네 구간의 복도를 이동한다. STM32가 초음파를 측정하고 현장 장치를 제어한다. ESP32-L은 흰 바탕에 검은 관제 지도를 그린다. 기본 HOLD는 표시를 마치면 패널을 절전시키고 완료 여부를 저장한다. 다음 부팅은 기존 지도를 그대로 유지한다. ESP32 USB에 `U`를 보내면 STM32의 실시간 좌표·상태를 표시한다. `H`는 고정 지도 다시 표시, `A`는 180초 간격 자동 재표시, `?`는 모드·완료 횟수 조회다. PC에서 보낸 관제 명령은 LED를 바꾸고, 위험지점의 다섯 번째 센서는 독립적으로 부저를 제어한다. 키패드 `1`~`5`를 누르고 있으면 선택한 센서의 응답도 소리로 확인할 수 있다.
 
@@ -81,3 +85,7 @@ PC는 **9600 baud, 8N1, 흐름 제어 없음**으로 연결한다. 명령은 대
 - **실습 환경과 SPL** — `C:\mcu`의 IAR 프로젝트, `System_func.*`, `stm32f10x_vector.c`, `STM32F10x_FLASH.icf`, ST 배포 헤더·소스를 기준으로 삼았다. 라이브러리 호출은 트리에 포함한 버전으로 컴파일한다. 타이머 입력 캡처와 USART 동작은 제조사 레퍼런스에 따른다. [ST RM0008](https://www.st.com/resource/en/reference_manual/cd00171190.pdf)
 - **장치별 동작** — 제공된 GPIO 입력·출력, PIEZO, 인터럽트, UART 및 모터 실습과 `2조_위험구역_관제실_흐름_배선계획.html`의 배선·추적·관제 절을 사용했다. 5개 센서의 순차 측정, 모형 좌표 추정, 관제 명령과 화면 처리는 이 과제를 위한 통합 코드다.
 - **전자종이** — Good Display의 ESP32-L·DESPI-C02와 GDEY075T7 흑백 예제를 기반으로 Seeed T075A04 패널을 구동한다. [ESP32-L 개발 키트](https://kr.good-display.com/news/193.html) · [Good Display ESP32 흑백 예제](https://github.com/gooddisplayshare/ESP32epdx/tree/d5ed3b777bedb9b407ccff09dc810a9248eb7926/examples/2-Colors%20%28BW%29/7.5/GDEY075T7)
+
+## 보관 · 서보 회전식 초음파 탐지기
+
+주제 전환 때 작성한 초음파 스캐너는 보관 자료로 남긴다. [스캐너 코드·설명](ultrasonic-scan/) · [배선도 PDF](ultrasonic-scan/docs/wiring.pdf) · [스캐너 ZIP](ultrasonic-scan.zip). 현재 진행하는 SAVE의 코드·배선·시험 기준은 이 문서 상단과 루트의 `stm32/`, `esp32/`, `docs/`를 따른다.
