@@ -2,9 +2,9 @@
 #define SCAN_CONFIG_H
 
 /* Nominal angles, calibrated by centering the horn before fitting the sensor. */
-#define SCAN_LEFT_DEG       60
+#define SCAN_LEFT_DEG       0
 #define SCAN_CENTER_DEG     90
-#define SCAN_RIGHT_DEG      120
+#define SCAN_RIGHT_DEG      180
 #define SCAN_STEP_DEG       5
 #define SERVO_0_US          1000
 #define SERVO_180_US        2000

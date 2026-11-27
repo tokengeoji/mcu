@@ -145,7 +145,8 @@ static void set_buzzer(int on)
 #if BENCH_CHECK
 static void bench_startup(void)
 {
-    static const u8 angles[] = { SCAN_LEFT_DEG, SCAN_RIGHT_DEG, SCAN_CENTER_DEG };
+    /* Keep the short wiring check independent of the normal scan limits. */
+    static const u8 angles[] = { 60, 120, SCAN_CENTER_DEG };
     unsigned i;
     set_buzzer(1);
     wait_ms(150);

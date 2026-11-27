@@ -44,7 +44,7 @@
   </g>
   <text x="210" y="160" class="section">센서를 SG90 혼 위에 고정</text>
   <text x="210" y="190" class="body">90° 정렬 모드로 중심을 잡고 전원을 끈 뒤, 센서 앞면이 정면을 향하게 장착한다.</text>
-  <text x="210" y="217" class="note">60~120° 왕복 중 네 가닥 센서선이 당겨지지 않게 여유를 둔다.</text>
+  <text x="210" y="217" class="note">정면에서 양쪽으로 90°씩 돌아갈 때 센서선이 당겨지지 않게 여유를 둔다.</text>
 
   <rect x="40" y="248" width="980" height="102" rx="9" class="panel"/>
   <text x="62" y="280" class="section">SG90 서보의 세 가닥</text>
