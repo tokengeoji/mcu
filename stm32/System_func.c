@@ -4,7 +4,6 @@
 void Init_STM32F103(void){
   
   ErrorStatus HSEStartUpStatus;
-  u32 remaining;
   
   RCC_DeInit();
 
@@ -38,15 +37,17 @@ void Init_STM32F103(void){
     /* Enable PLL */ 
     RCC_PLLCmd(ENABLE);
 
-    /* Bounded start-up; keep HSI on if the external PLL does not lock.
-       The application derives its prescalers from RCC_GetClocksFreq(). */
-    remaining = 65535UL;
-    while (RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET && remaining) --remaining;
-    if (RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == SET) {
-      RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
-      remaining = 65535UL;
-      while (RCC_GetSYSCLKSource() != 0x08 && remaining) --remaining;
-      if (RCC_GetSYSCLKSource() != 0x08) RCC_SYSCLKConfig(RCC_SYSCLKSource_HSI);
+    /* Wait till PLL is ready */
+    while(RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET)
+    {
+    }
+
+    /* Select PLL as system clock source */
+    RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
+
+    /* Wait till PLL is used as system clock source */
+    while(RCC_GetSYSCLKSource() != 0x08)
+    {
     }
   }
 

@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="1102" viewBox="0 0 1120 1102" role="img" aria-labelledby="title desc" xml:lang="ko">
+  <title id="title">STM32 실습 키트 소켓 위치와 HC-SR04P 한 개의 브레드보드 결선</title>
+  <desc id="desc">RESET이 오른쪽 아래일 때 왼쪽 헤더는 J3, 오른쪽은 J4, J3와 MCU 사이가 J5다.
+    PA0, PA6, PA8은 J3 왼쪽 열, PB10은 J3 오른쪽 열, PC8은 J4 왼쪽 열에 있다.
+    J5 4번은 공통 접지다. 센서 VCC, TRIG, ECHO, GND를 E3, E4, E5, E6에 꽂고
+    양극 레일에서 A3, PC8에서 B4, PA0에서 B5, 음극 레일에서 A6으로 연결한다.</desc>
+  <defs>
+    <style>
+      text { font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; fill: #18343e; }
+      .title { font-size: 37px; font-weight: 700; }
+      .section { font-size: 24px; font-weight: 700; }
+      .body { font-size: 18px; }
+      .sm { font-size: 16px; fill: #46616a; }
+      .pin { font-size: 18px; font-weight: 700; }
+      .panel { fill: #fff; stroke: #b6cbd0; stroke-width: 1.5; }
+    </style>
+    <g id="pair"><circle cx="0" cy="0" r="3.5"/><circle cx="11" cy="0" r="3.5"/></g>
+    <g id="pairjtag"><circle cx="0" cy="0" r="3"/><circle cx="12" cy="0" r="3"/></g>
+    <g id="holes" stroke="#769198" fill="#fff" stroke-width="2">
+      <circle cx="0" cy="0" r="5"/><circle cx="56" cy="0" r="5"/><circle cx="112" cy="0" r="5"/>
+      <circle cx="168" cy="0" r="5"/><circle cx="224" cy="0" r="5"/>
+    </g>
+  </defs>
+  <rect width="1120" height="1102" fill="#f4f8f7"/>
+  <text x="39" y="57" class="title">실습 키트 소켓과 브레드보드 꽂는 위치</text>
+  <text x="40" y="93" class="body">서보 회전식 초음파 탐지기 · HBE-MCU-MULTI / STM32F103RBT6</text>
+
+  <text x="40" y="151" class="section">보드에서 신호 핀 찾기</text>
+  <text x="40" y="181" class="sm">부품 면을 위로 놓고 오른쪽 아래의 빨간 RESET을 기준으로 돌려 맞춘다. 강조한 구멍과 기판의 글자를 함께 확인한다.</text>
+  <rect x="40" y="202" width="684" height="369" rx="12" fill="#e6ede8" stroke="#84978c" stroke-width="2"/>
+  <g fill="#f9fbfa" stroke="#bdcbc4" stroke-width="3">
+    <circle cx="59" cy="221" r="7"/><circle cx="705" cy="221" r="7"/><circle cx="59" cy="552" r="7"/><circle cx="705" cy="552" r="7"/>
+  </g>
+  <text x="159" y="250" class="pin" text-anchor="middle">J3</text>
+  <text x="637" y="250" class="pin" text-anchor="middle">J4</text>
+  <rect x="146" y="264" width="29" height="260" rx="3" fill="#324d48"/>
+  <rect x="624" y="264" width="29" height="260" rx="3" fill="#324d48"/>
+  <g fill="#9cb1a9">
+      <use href="#pair" x="155" y="274"/>
+      <use href="#pair" x="155" y="290"/>
+      <use href="#pair" x="155" y="306"/>
+      <use href="#pair" x="155" y="322"/>
+      <use href="#pair" x="155" y="338"/>
+      <use href="#pair" x="155" y="354"/>
+      <use href="#pair" x="155" y="370"/>
+      <use href="#pair" x="155" y="386"/>
+      <use href="#pair" x="155" y="402"/>
+      <use href="#pair" x="155" y="418"/>
+      <use href="#pair" x="155" y="434"/>
+      <use href="#pair" x="155" y="450"/>
+      <use href="#pair" x="155" y="466"/>
+      <use href="#pair" x="155" y="482"/>
+      <use href="#pair" x="155" y="498"/>
+      <use href="#pair" x="155" y="514"/>
+      <use href="#pair" x="633" y="274"/>
+      <use href="#pair" x="633" y="290"/>
+      <use href="#pair" x="633" y="306"/>
+      <use href="#pair" x="633" y="322"/>
+      <use href="#pair" x="633" y="338"/>
+      <use href="#pair" x="633" y="354"/>
+      <use href="#pair" x="633" y="370"/>
+      <use href="#pair" x="633" y="386"/>
+      <use href="#pair" x="633" y="402"/>
+      <use href="#pair" x="633" y="418"/>
+      <use href="#pair" x="633" y="434"/>
+      <use href="#pair" x="633" y="450"/>
+      <use href="#pair" x="633" y="466"/>
+      <use href="#pair" x="633" y="482"/>
+      <use href="#pair" x="633" y="498"/>
+      <use href="#pair" x="633" y="514"/>
+  </g>
+  <g stroke="#fff" stroke-width="2">
+    <circle cx="155" cy="274" r="6.5" fill="#2e6396"/><circle cx="155" cy="370" r="6.5" fill="#80568f"/>
+    <circle cx="155" cy="402" r="6.5" fill="#226e87"/><circle cx="166" cy="402" r="6.5" fill="#6d6137"/>
+    <circle cx="633" cy="402" r="6.5" fill="#006d65"/>
+  </g>
+  <g class="pin" text-anchor="end">
+    <text x="137" y="280">PA0</text><text x="137" y="376">PA6</text><text x="137" y="408">PA8</text>
+    <text x="613" y="408">PC8</text>
+  </g>
+  <text x="183" y="408" class="pin">PB10</text>
+  <text x="154" y="550" class="sm" text-anchor="middle">1-L / 1-R</text>
+  <text x="636" y="550" class="sm" text-anchor="middle">2-L / 2-R</text>
+
+  <rect x="258" y="292" width="51" height="191" rx="4" fill="#324d48"/>
+  <g fill="#abac8a">
+      <use href="#pairjtag" x="277" y="310"/>
+      <use href="#pairjtag" x="277" y="327"/>
+      <use href="#pairjtag" x="277" y="344"/>
+      <use href="#pairjtag" x="277" y="361"/>
+      <use href="#pairjtag" x="277" y="378"/>
+      <use href="#pairjtag" x="277" y="395"/>
+      <use href="#pairjtag" x="277" y="412"/>
+      <use href="#pairjtag" x="277" y="429"/>
+      <use href="#pairjtag" x="277" y="446"/>
+      <use href="#pairjtag" x="277" y="463"/>
+  </g>
+  <text x="283" y="509" class="pin" text-anchor="middle">J5</text>
+  <rect x="348" y="331" width="88" height="87" rx="7" fill="#5d7068"/>
+  <text x="392" y="382" font-size="16" text-anchor="middle" style="fill:white">STM32</text>
+  <rect x="470" y="280" width="71" height="34" rx="5" fill="#d0dad3" stroke="#a0b1a9"/>
+  <text x="505" y="302" class="sm" text-anchor="middle">PROG</text>
+  <rect x="467" y="333" width="77" height="51" rx="4" fill="white" stroke="#9eaaa4" stroke-width="2"/>
+  <text x="505" y="365" class="sm" text-anchor="middle">USB</text>
+  <rect x="475" y="448" width="61" height="45" rx="4" fill="#c5d0c9" stroke="#9eaaa4"/>
+  <circle cx="505" cy="470" r="15" fill="#c34a39"/>
+  <text x="505" y="519" class="pin" text-anchor="middle">RESET</text>
+
+  <rect x="741" y="202" width="339" height="369" rx="12" class="panel"/>
+  <text x="762" y="242" class="section">J5 4번 · 공통 GND</text>
+  <text x="762" y="276" class="sm">J3와 MCU 칩 사이의 검은</text>
+  <text x="762" y="301" class="sm">2×10 JTAG 헤더다.</text>
+  <text x="762" y="343" class="pin">J5의 1번 표시를 먼저 찾는다.</text>
+  <rect x="764" y="361" width="292" height="84" rx="7" fill="#edf3f1"/>
+  <g class="pin" text-anchor="middle">
+    <text x="797" y="390">1</text><text x="858" y="390">3</text><text x="918" y="390">5</text><text x="976" y="390">⋯</text><text x="1025" y="390">19</text>
+    <text x="797" y="427">2</text><rect x="838" y="403" width="40" height="32" rx="4" fill="#344955"/>
+    <text x="858" y="427" style="fill:white">4</text><text x="918" y="427">6</text><text x="976" y="427">⋯</text><text x="1025" y="427">20</text>
+  </g>
+  <text x="762" y="480" class="sm">1번 맞은편이 2번이다. 2번과</text>
+  <text x="762" y="505" class="sm">같은 줄의 바로 다음 핀이 4번이다.</text>
+  <text x="762" y="543" class="pin">4번 → 브레드보드 − 레일</text>
+
+  <rect x="40" y="587" width="1040" height="56" rx="6" fill="#e7eff0"/>
+  <text x="58" y="622" class="body">PA0 ← ECHO</text><text x="247" y="622" class="body">PC8 → TRIG</text>
+  <text x="416" y="622" class="body">PA8 → SG90</text><text x="582" y="622" class="body">PA6 → PIEZO</text>
+  <text x="768" y="622" class="body">PB10 → 키트 TX0 (선택)</text>
+
+  <text x="40" y="699" class="section">센서 한 개를 브레드보드에 연결</text>
+  <text x="40" y="731" class="sm">전원을 끄고 센서에 인쇄된 VCC·TRIG·ECHO·GND를 확인한다. 같은 번호의 A–E 구멍 다섯 개는 내부에서 연결된다.</text>
+  <rect x="40" y="752" width="1040" height="266" rx="9" class="panel"/>
+  <rect x="353" y="764" width="311" height="240" rx="8" fill="#eef2f0" stroke="#bdcdc8"/>
+  <text x="60" y="794" class="pin">점퍼의 출발점</text>
+  <text x="761" y="794" class="pin">HC-SR04P의 단자</text>
+  <g class="pin" text-anchor="middle">
+    <text x="380" y="794">A</text><text x="436" y="794">B</text><text x="492" y="794">C</text>
+    <text x="548" y="794">D</text><text x="604" y="794">E</text>
+  </g>
+  <g stroke="#bbc9c5" stroke-width="3">
+    <path d="M380 835 H604 M380 884 H604 M380 933 H604 M380 982 H604"/>
+  </g>
+  <use href="#holes" x="380" y="835"/><use href="#holes" x="380" y="884"/>
+  <use href="#holes" x="380" y="933"/><use href="#holes" x="380" y="982"/>
+  <g class="body">
+    <text x="60" y="842">센서용 +3.3 V 레일</text><text x="60" y="891">STM32 PC8</text>
+    <text x="60" y="940">STM32 PA0</text><text x="60" y="989">공통 − 레일</text>
+    <text x="761" y="842">E3 · VCC</text><text x="761" y="891">E4 · TRIG</text>
+    <text x="761" y="940">E5 · ECHO</text><text x="761" y="989">E6 · GND</text>
+  </g>
+  <g class="sm" text-anchor="end">
+    <text x="334" y="828">A3</text><text x="334" y="877">B4</text><text x="334" y="926">B5</text><text x="334" y="975">A6</text>
+  </g>
+  <g class="sm" text-anchor="middle">
+    <text x="639" y="827">3</text><text x="639" y="876">4</text><text x="639" y="925">5</text><text x="639" y="974">6</text>
+  </g>
+  <g stroke-width="3.5" fill="none" stroke-linecap="round">
+    <path d="M246 835 H380 M604 835 H741" stroke="#ac482e"/>
+    <path d="M246 884 H352 Q367 884 374 875 Q380 868 387 875 Q395 884 410 884 H436 M604 884 H741" stroke="#006d65"/>
+    <path d="M246 933 H352 Q367 933 374 924 Q380 917 387 924 Q395 933 410 933 H436 M604 933 H741" stroke="#2e6396"/>
+    <path d="M246 982 H380 M604 982 H741" stroke="#344955"/>
+  </g>
+  <g stroke="white" stroke-width="1.5">
+    <g fill="#ac482e"><circle cx="380" cy="835" r="6"/><circle cx="604" cy="835" r="6"/></g>
+    <g fill="#006d65"><circle cx="436" cy="884" r="6"/><circle cx="604" cy="884" r="6"/></g>
+    <g fill="#2e6396"><circle cx="436" cy="933" r="6"/><circle cx="604" cy="933" r="6"/></g>
+    <g fill="#344955"><circle cx="380" cy="982" r="6"/><circle cx="604" cy="982" r="6"/></g>
+  </g>
+  <text x="40" y="1052" class="sm">서보에는 별도 정격 전원을 공급한다. 서보 전원 −, 센서 전원 −와 J5 4번은 같은 GND 레일에 연결한다.</text>
+  <text x="40" y="1081" class="sm">소켓 위치 근거 · 실험1-GPIO-InputOutput 교재 20쪽 보드 사진·소켓 표, 21쪽 J5 회로도</text>
+</svg>

@@ -2,7 +2,7 @@
 
 <workspace>
   <project>
-    <path>$WS_DIR$\Getting_start.ewp</path>
+    <path>$WS_DIR$\SweepScan.ewp</path>
   </project>
   <batchBuild/>
 </workspace>

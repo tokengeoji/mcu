@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="1070" viewBox="0 0 1060 1070" role="img" aria-labelledby="title desc" xml:lang="ko">
+  <title id="title">서보 회전식 초음파 탐지기 배선도</title>
+  <desc id="desc">서보 혼에 설치한 HC-SR04P의 TRIG는 PC8, ECHO는 PA0에 연결한다. PA8은 SG90 Signal, PA6은 키트 PIEZO 입력으로 연결한다.
+    PC에서 로그를 볼 때 PB10을 키트 UART의 TX0에 연결한다. 센서 VCC에는 3.3 V, 서보 V+에는 별도 정격 전원을 공급한다.
+    두 전원 음극, 센서와 서보의 GND, STM32 J5 4번을 같은 GND 레일로 연결한다.</desc>
+  <defs>
+    <style>
+      text { font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; fill: #18343e; }
+      .title { font-size: 38px; font-weight: 700; }
+      .section { font-size: 23px; font-weight: 700; }
+      .pin { font-size: 22px; font-weight: 700; }
+      .body { font-size: 18px; }
+      .note { font-size: 16px; fill: #48626d; }
+      .signal { font-size: 16px; font-weight: 700; fill: #375861; text-anchor: middle; }
+      .panel { fill: white; stroke: #b7cbd1; stroke-width: 1.5; }
+      .net { fill: none; stroke-width: 3.5; stroke-linecap: round; }
+    </style>
+    <marker id="drive" viewBox="0 0 10 10" markerWidth="3.5" markerHeight="3.5" refX="9" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#006d65"/>
+    </marker>
+    <marker id="echo" viewBox="0 0 10 10" markerWidth="3.5" markerHeight="3.5" refX="9" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#2e6396"/>
+    </marker>
+    <marker id="power" viewBox="0 0 10 10" markerWidth="3.5" markerHeight="3.5" refX="9" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#a94429"/>
+    </marker>
+  </defs>
+  <rect width="1060" height="1070" fill="#f5f8f8"/>
+  <text x="38" y="58" class="title">서보 회전식 초음파 탐지기 배선도</text>
+  <text x="40" y="96" class="body">한백전자 HBE-MCU-MULTI · STM32F103RBT6</text>
+
+  <rect x="40" y="123" width="980" height="111" rx="9" fill="#e9f3f0"/>
+  <!-- Front view: the ultrasonic board sits on the servo horn. -->
+  <g stroke="#215e58" stroke-width="2.5">
+    <rect x="75" y="136" width="104" height="40" rx="4" fill="#cae1db"/>
+    <circle cx="99" cy="156" r="14" fill="#fff"/><circle cx="155" cy="156" r="14" fill="#fff"/>
+    <circle cx="99" cy="156" r="8" fill="#96b4ac"/><circle cx="155" cy="156" r="8" fill="#96b4ac"/>
+    <path d="M127 176 V191" stroke-width="5"/>
+    <path d="M98 183 H156" stroke-width="5"/>
+    <rect x="105" y="191" width="44" height="28" rx="3" fill="#d4e4ea"/>
+  </g>
+  <text x="210" y="160" class="section">센서를 SG90 혼 위에 고정</text>
+  <text x="210" y="190" class="body">90° 정렬 모드로 중심을 잡고 전원을 끈 뒤, 센서 앞면이 정면을 향하게 장착한다.</text>
+  <text x="210" y="217" class="note">60~120° 왕복 중 네 가닥 센서선이 당겨지지 않게 여유를 둔다.</text>
+
+  <text x="40" y="281" class="section">신호 배선</text>
+  <text x="40" y="313" class="note">MCU 보드의 빨간 RESET 버튼을 오른쪽 아래로 두고, J3·J4 소켓에 인쇄된 핀 이름을 확인한다.</text>
+  <rect x="40" y="335" width="304" height="286" rx="9" class="panel"/>
+  <text x="60" y="371" class="section">STM32 GPIO 소켓</text>
+  <path d="M41 384 H343" stroke="#d5e0e2"/>
+  <g class="pin">
+    <text x="60" y="419">PC8</text>
+    <text x="60" y="465">PA0</text>
+    <text x="60" y="533">PA8</text>
+    <text x="60" y="600">PA6</text>
+  </g>
+  <g class="note">
+    <text x="143" y="418">J4 왼쪽 열 (2-L)</text>
+    <text x="143" y="464">J3 왼쪽 열 (1-L)</text>
+    <text x="143" y="532">J3 왼쪽 열 (1-L)</text>
+    <text x="143" y="599">J3 왼쪽 열 (1-L)</text>
+  </g>
+  <rect x="655" y="335" width="365" height="152" rx="9" class="panel"/>
+  <text x="677" y="371" class="section">HC-SR04P · 초음파 센서</text>
+  <path d="M656 384 H1019" stroke="#d5e0e2"/>
+  <text x="677" y="419" class="pin">TRIG</text><text x="798" y="418" class="body">측정 시작 입력</text>
+  <text x="677" y="465" class="pin">ECHO</text><text x="798" y="464" class="body">반사 펄스 출력</text>
+  <rect x="655" y="495" width="365" height="59" rx="9" class="panel"/>
+  <text x="677" y="533" class="pin">Signal</text><text x="798" y="532" class="body">SG90 서보 신호선</text>
+  <rect x="655" y="562" width="365" height="59" rx="9" class="panel"/>
+  <text x="677" y="600" class="pin">PIEZO</text><text x="798" y="599" class="body">키트 피에조 모듈 입력</text>
+  <g class="net" stroke="#006d65" marker-end="url(#drive)">
+    <path d="M344 412 H651"/><path d="M344 526 H651"/><path d="M344 593 H651"/>
+  </g>
+  <path d="M655 458 H348" class="net" stroke="#2e6396" marker-end="url(#echo)"/>
+  <g class="signal">
+    <text x="500" y="404">트리거 출력</text><text x="500" y="450">ECHO 입력</text>
+    <text x="500" y="518">위치 PWM · 20 ms 주기</text><text x="500" y="585">감지음 출력</text>
+  </g>
+
+  <rect x="40" y="638" width="980" height="104" fill="#edf1f7" rx="9"/>
+  <text x="60" y="669" class="section">PC 측정 로그 (선택)</text>
+  <text x="60" y="714" class="pin">PB10</text><text x="143" y="713" class="note">J3 오른쪽 열 (1-R)</text>
+  <path d="M344 707 H651" class="net" stroke="#006d65" stroke-dasharray="7 5" marker-end="url(#drive)"/>
+  <text x="500" y="699" class="signal">USART3_TX · 115200 8N1</text>
+  <text x="677" y="714" class="pin">TX0</text><text x="761" y="713" class="body">키트 UART → USB → PC</text>
+
+  <text x="40" y="788" class="section">전원과 공통 접지</text>
+  <text x="40" y="819" class="note">전원을 끄고 배선한다. 센서와 서보의 양극은 각각 전용 전원에만 연결한다.</text>
+  <rect x="40" y="833" width="980" height="97" rx="9" class="panel"/>
+  <text x="60" y="868" class="body">센서용 정전압 전원</text><text x="312" y="868" class="pin">+3.3 V</text>
+  <text x="60" y="910" class="body">SG90용 별도 정격 전원</text><text x="312" y="910" class="pin">+</text>
+  <g class="net" stroke="#a94429" marker-end="url(#power)">
+    <path d="M415 861 H651"/><path d="M415 903 H651"/>
+  </g>
+  <text x="677" y="868" class="pin">HC-SR04P VCC</text><text x="677" y="910" class="pin">SG90 V+</text>
+
+  <text x="40" y="968" class="section">공통 GND 레일 (−)</text>
+  <g class="note" text-anchor="middle">
+    <text x="130" y="996">STM32 J5 4번</text><text x="333" y="996">센서 전원 −</text>
+    <text x="534" y="996">서보 전원 −</text><text x="733" y="996">센서 GND</text><text x="936" y="996">서보 GND</text>
+  </g>
+  <path d="M130 1017 H936 M130 1007 V1017 M333 1007 V1017 M534 1007 V1017 M733 1007 V1017 M936 1007 V1017"
+        class="net" stroke="#344753"/>
+  <g fill="#344753">
+    <circle cx="130" cy="1007" r="4"/><circle cx="333" cy="1007" r="4"/><circle cx="534" cy="1007" r="4"/>
+    <circle cx="733" cy="1007" r="4"/><circle cx="936" cy="1007" r="4"/>
+  </g>
+  <text x="40" y="1051" class="note">ECHO의 HIGH 전압을 PA0에 꽂기 전에 측정한다. 5 V 출력형은 3.3 V 레벨 변환을 거쳐 연결한다.</text>
+</svg>

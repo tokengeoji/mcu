@@ -9,9 +9,10 @@
 #define SERVO_0_US          1000
 #define SERVO_180_US        2000
 #define SERVO_PERIOD_US     20000
-/* Use 1 during assembly to hold the horn at its 90 degree center.
-   Set back to 0 and rebuild/reflash for normal scanning. */
+/* The IAR alignment build supplies CENTER_ONLY=1. */
+#ifndef CENTER_ONLY
 #define CENTER_ONLY         0
+#endif
 #define START_SETTLE_MS     3000
 #define STEP_SETTLE_MS      80
 #define ECHO_TIMEOUT_US     30000
@@ -20,6 +21,10 @@
 #define ALERT_ENTER_MM      300
 #define ALERT_RELEASE_MM    350
 #define BUZZER_HZ           1024
+
+#if CENTER_ONLY != 0 && CENTER_ONLY != 1
+#error Invalid_center_only_mode
+#endif
 
 #if SCAN_LEFT_DEG < 0 || SCAN_RIGHT_DEG > 180 || SCAN_LEFT_DEG >= SCAN_CENTER_DEG || SCAN_CENTER_DEG >= SCAN_RIGHT_DEG || SCAN_STEP_DEG < 1 || SCAN_STEP_DEG > 180
 #error Invalid_scan_limits

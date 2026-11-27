@@ -3,3 +3,5 @@
 stm32/** text=auto eol=crlf
 stm32/*.md text eol=lf
 *.png binary
+*.pdf binary
+*.dfu binary

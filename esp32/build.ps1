@@ -9,7 +9,7 @@ $revision = 'd5ed3b777bedb9b407ccff09dc810a9248eb7926'
 $raw = "https://raw.githubusercontent.com/gooddisplayshare/ESP32epdx/$revision"
 $work = Join-Path $PSScriptRoot '.build'
 $cache = Join-Path $work $revision
-$sketch = Join-Path $work 'ControlRoom'
+$sketch = Join-Path $work 'ScanDisplay'
 $lib = Join-Path $work 'libraries/ESP32epdx'
 $panel = 'examples/2-Colors (BW)/7.5/GDEY075T7'
 $null = New-Item -ItemType Directory -Force $cache,$sketch,$lib
@@ -58,14 +58,13 @@ $driver = [regex]::Replace($driver, $powerOff, ('$1' + '    delay_xms(100);' + [
 $driver = $driver.Replace('x_end%256-1','x_end%256').Replace('y_end%256-1','y_end%256')
 [IO.File]::WriteAllText($driverFile,$driver,[Text.UTF8Encoding]::new($false))
 
-Copy-Item -Force (Join-Path $PSScriptRoot 'ControlRoom/*') $sketch
-Copy-Item -Force -LiteralPath (Join-Path $PSScriptRoot '../stm32/site_profile.h') -Destination $sketch
+Copy-Item -Force (Join-Path $PSScriptRoot 'ScanDisplay/*') $sketch
 if ($PrepareIde) {
     $ideRoot = Join-Path $PSScriptRoot 'ArduinoIDE'
-    $ideSketch = Join-Path $ideRoot 'ControlRoom'
+    $ideSketch = Join-Path $ideRoot 'ScanDisplay'
     # A sketch already opened and edited in the IDE belongs to its user.
     if (Test-Path -LiteralPath $ideSketch) {
-        $ideSketch = Join-Path $ideRoot ((Get-Date -Format 'yyyyMMdd-HHmmss-fffffff') + '/ControlRoom')
+        $ideSketch = Join-Path $ideRoot ((Get-Date -Format 'yyyyMMdd-HHmmss-fffffff') + '/ScanDisplay')
     }
     $null = New-Item -ItemType Directory -Path $ideSketch -Force
     Copy-Item -Path (Join-Path $sketch '*') -Destination $ideSketch
@@ -79,7 +78,7 @@ if ($PrepareIde) {
         $localInclude = '"src/ESP32epdx/' + $header + '"'
         [IO.File]::WriteAllText($path, $source.Replace("<$header>", $localInclude), [Text.UTF8Encoding]::new($false))
     }
-    Write-Output (Join-Path $ideSketch 'ControlRoom.ino')
+    Write-Output (Join-Path $ideSketch 'ScanDisplay.ino')
     return
 }
 $options = @()
@@ -92,3 +91,4 @@ if ($UploadPort) {
     & $ArduinoCli upload @options --fqbn $fqbn --port $UploadPort --input-dir $bin $sketch
     if ($LASTEXITCODE -ne 0) { throw "Arduino upload failed ($LASTEXITCODE)" }
 }
+

@@ -1,5 +1,6 @@
 # IAR Embedded Workbench intermediates and machine-specific settings
 EMB_FLASH/
+ALIGN_CENTER/
 settings/
 *.dep
 *.ewt

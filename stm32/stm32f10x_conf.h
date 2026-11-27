@@ -51,7 +51,6 @@
 
 /************************************* EXTI ***********************************/
 //#define _EXTI
-
 /************************************* FLASH and Option Bytes *****************/
 #define _FLASH
 /* Uncomment the line below to enable FLASH program/erase/protections functions,
@@ -94,23 +93,21 @@
 //#define _SPI2
 
 /************************************* SysTick ********************************/
-#define _SysTick
+//#define _SysTick
 
 /************************************* TIM1 ***********************************/
 #define _TIM1
-
 /************************************* TIM ************************************/
 #define _TIM
 #define _TIM2
 #define _TIM3
-#define _TIM4
+//#define _TIM4
 
 /************************************* USART **********************************/
 #define _USART
-#define _USART1
+//#define _USART1
 //#define _USART2
 #define _USART3
-
 /************************************* WWDG ***********************************/
 //#define _WWDG
 
