@@ -136,6 +136,31 @@ static void wait_ms(unsigned duration)
     while (duration--) wait_us(1000);
 }
 
+static void set_buzzer(int on)
+{
+    /* V1 TIM_OCInit enables TIM3 CH1. CCR1=0 holds PA6 low in PWM1. */
+    TIM_SetCompare1(TIM3, on ? (u16)(1000000UL / BUZZER_HZ / 2) : 0);
+}
+
+#if BENCH_CHECK
+static void bench_startup(void)
+{
+    static const u8 angles[] = { SCAN_LEFT_DEG, SCAN_RIGHT_DEG, SCAN_CENTER_DEG };
+    unsigned i;
+    set_buzzer(1);
+    wait_ms(150);
+    set_buzzer(0);
+    wait_ms(150);
+    set_buzzer(1);
+    wait_ms(150);
+    set_buzzer(0);
+    for (i = 0; i < sizeof(angles) / sizeof(angles[0]); ++i) {
+        TIM1_SetCompare1(pulse_for_angle(angles[i]));
+        wait_ms(1000);
+    }
+}
+#endif
+
 static int measure_mm(void)
 {
     const u16 edges = TIM_FLAG_CC1 | TIM_FLAG_CC2;
@@ -211,23 +236,32 @@ int main(void)
     for (;;) { } /* TIM1 holds 90 degrees until reset. */
 #else
     u16 sequence = 0;
-    int angle = SCAN_CENTER_DEG, step = SCAN_STEP_DEG, alert = 0;
+    int angle = SCAN_CENTER_DEG, alert = 0;
+#if !BENCH_CHECK
+    int step = SCAN_STEP_DEG;
+#endif
     int distance;
     init_hardware();
+#if BENCH_CHECK
+    bench_startup();
+#else
     wait_ms(START_SETTLE_MS);
+#endif
     for (;;) {
         distance = measure_mm();
         /* Invalid echoes clear the alert; hysteresis limits chatter near the boundary. */
         alert = distance >= 0 && (alert ? distance < ALERT_RELEASE_MM : distance <= ALERT_ENTER_MM);
-        TIM_SetCompare1(TIM3, alert ? (u16)(1000000UL / BUZZER_HZ / 2) : 0);
+        set_buzzer(alert);
         publish_scan(sequence++, alert, angle, distance);
 
+#if !BENCH_CHECK
         if (angle == SCAN_RIGHT_DEG) step = -SCAN_STEP_DEG;
         if (angle == SCAN_LEFT_DEG) step = SCAN_STEP_DEG;
         angle += step;
         if (angle > SCAN_RIGHT_DEG) angle = SCAN_RIGHT_DEG;
         if (angle < SCAN_LEFT_DEG) angle = SCAN_LEFT_DEG;
         TIM1_SetCompare1(pulse_for_angle(angle));
+#endif
         wait_ms(STEP_SETTLE_MS);
     }
 #endif

@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="725" viewBox="0 0 1100 725" role="img" aria-labelledby="title desc" xml:lang="ko">
+  <title id="title">키트 피에조 배선 · PA6에서 오디오 모듈 PIEZO까지</title>
+  <desc id="desc">빨간 RESET 버튼을 오른쪽 아래로 놓은 STM32의 왼쪽 J3 헤더에서 왼쪽 열 PA6을 찾는다.
+    점퍼 한 가닥으로 AUDIO MODULE의 둥근 버저 아래 두 줄 헤더에서 PIEZO라고 인쇄된 입력까지 연결한다.
+    같은 키트에 장착한 모듈은 키트 전원과 접지를 사용한다.</desc>
+  <defs>
+    <style>
+      text { font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif; fill:#18343e; }
+      .title { font-size:38px; font-weight:700; }
+      .head { font-size:24px; font-weight:700; }
+      .body { font-size:19px; }
+      .note { font-size:16px; fill:#47616b; }
+      .silk { font-weight:700; font-size:16px; fill:#344c48; }
+      .pin { font-weight:700; font-size:20px; }
+    </style>
+    <g id="vertical"><circle r="3"/><circle cx="10" r="3"/></g>
+    <g id="horizontal"><circle r="3"/><circle cy="11" r="3"/></g>
+    <marker id="signal" viewBox="0 0 12 12" markerWidth="13" markerHeight="13" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0 0 L12 6 L0 12 Z" fill="#006b61"/>
+    </marker>
+  </defs>
+  <rect width="1100" height="725" fill="#f4f8f7"/>
+  <text x="38" y="59" class="title">키트 피에조 배선 · PA6 → PIEZO</text>
+  <text x="40" y="99" class="body">HBE-MCU-MULTI 전원을 끄고, 같은 실습판에 장착한 두 모듈을 점퍼 한 가닥으로 잇는다.</text>
+
+  <text x="46" y="156" class="head">STM32 MCU 모듈</text>
+  <text x="46" y="189" class="note">빨간 RESET 버튼이 오른쪽 아래로 오게 놓는다.</text>
+  <text x="579" y="156" class="head">AUDIO MODULE</text>
+  <text x="579" y="189" class="note">중앙의 둥근 버저와 오른쪽의 HPhone·MIC 잭을 찾는다.</text>
+
+  <rect x="57" y="213" width="417" height="287" rx="12" fill="#e4ece6" stroke="#8ba096" stroke-width="2"/>
+  <rect x="579" y="213" width="469" height="287" rx="12" fill="#e4ece6" stroke="#8ba096" stroke-width="2"/>
+  <g fill="#f4f8f7" stroke="#b7c6bd" stroke-width="3">
+    <circle cx="74" cy="232" r="6"/><circle cx="457" cy="232" r="6"/>
+    <circle cx="74" cy="483" r="6"/><circle cx="457" cy="483" r="6"/>
+    <circle cx="595" cy="483" r="7"/><circle cx="1031" cy="483" r="7"/>
+  </g>
+  <text x="263" y="249" text-anchor="middle" class="silk">ARM Cortex-M3 MCU Module</text>
+  <text x="121" y="276" text-anchor="middle" class="silk">J3</text>
+  <text x="427" y="276" text-anchor="middle" class="silk">J4</text>
+  <rect x="110" y="282" width="24" height="186" rx="4" fill="#304641"/>
+  <rect x="417" y="282" width="24" height="186" rx="4" fill="#304641"/>
+  <g fill="#a3b5ad">
+    <use href="#vertical" x="117" y="289"/>
+    <use href="#vertical" x="117" y="300.4"/>
+    <use href="#vertical" x="117" y="311.8"/>
+    <use href="#vertical" x="117" y="323.2"/>
+    <use href="#vertical" x="117" y="334.6"/>
+    <use href="#vertical" x="117" y="346"/>
+    <use href="#vertical" x="117" y="357.4"/>
+    <use href="#vertical" x="117" y="368.8"/>
+    <use href="#vertical" x="117" y="380.2"/>
+    <use href="#vertical" x="117" y="391.6"/>
+    <use href="#vertical" x="117" y="403"/>
+    <use href="#vertical" x="117" y="414.4"/>
+    <use href="#vertical" x="117" y="425.8"/>
+    <use href="#vertical" x="117" y="437.20000000000005"/>
+    <use href="#vertical" x="117" y="448.6"/>
+    <use href="#vertical" x="117" y="460"/>
+    <use href="#vertical" x="424" y="289"/>
+    <use href="#vertical" x="424" y="300.4"/>
+    <use href="#vertical" x="424" y="311.8"/>
+    <use href="#vertical" x="424" y="323.2"/>
+    <use href="#vertical" x="424" y="334.6"/>
+    <use href="#vertical" x="424" y="346"/>
+    <use href="#vertical" x="424" y="357.4"/>
+    <use href="#vertical" x="424" y="368.8"/>
+    <use href="#vertical" x="424" y="380.2"/>
+    <use href="#vertical" x="424" y="391.6"/>
+    <use href="#vertical" x="424" y="403"/>
+    <use href="#vertical" x="424" y="414.4"/>
+    <use href="#vertical" x="424" y="425.8"/>
+    <use href="#vertical" x="424" y="437.20000000000005"/>
+    <use href="#vertical" x="424" y="448.6"/>
+    <use href="#vertical" x="424" y="460"/>
+  </g>
+  <rect x="154" y="298" width="35" height="139" rx="3" fill="#40534e"/>
+  <g fill="#b9b89c">
+    <use href="#vertical" x="167" y="309"/>
+    <use href="#vertical" x="167" y="322"/>
+    <use href="#vertical" x="167" y="335"/>
+    <use href="#vertical" x="167" y="348"/>
+    <use href="#vertical" x="167" y="361"/>
+    <use href="#vertical" x="167" y="374"/>
+    <use href="#vertical" x="167" y="387"/>
+    <use href="#vertical" x="167" y="400"/>
+    <use href="#vertical" x="167" y="413"/>
+    <use href="#vertical" x="167" y="426"/>
+  </g>
+  <text x="171" y="459" text-anchor="middle" class="silk">J5</text>
+  <rect x="211" y="324" width="71" height="67" rx="6" fill="#5a6e65"/>
+  <text x="246" y="363" text-anchor="middle" font-size="14" style="fill:white">STM32</text>
+  <rect x="322" y="280" width="59" height="30" rx="5" fill="#ccd7cf" stroke="#a2b2a8"/>
+  <text x="351" y="301" text-anchor="middle" font-size="13">PROG</text>
+  <rect x="324" y="324" width="56" height="48" rx="4" fill="#fff" stroke="#a2b2a8"/>
+  <text x="352" y="354" text-anchor="middle" class="silk">USB</text>
+  <rect x="327" y="407" width="52" height="36" rx="4" fill="#c4d1c7" stroke="#95a99d"/>
+  <circle cx="353" cy="425" r="13" fill="#c44735"/>
+  <text x="353" y="466" text-anchor="middle" class="silk">RESET</text>
+  <text x="104" y="346" text-anchor="end" class="pin" style="fill:#006b61">PA6</text>
+
+  <text x="815" y="254" text-anchor="middle" class="silk">AUDIO MODULE</text>
+  <rect x="625" y="282" width="60" height="24" rx="4" fill="#d7ded8" stroke="#abb8ae"/>
+  <rect x="623" y="327" width="66" height="44" rx="3" fill="#576960"/>
+  <circle cx="795" cy="340" r="54" fill="#d4d9d4" stroke="#8c9e94" stroke-width="3"/>
+  <circle cx="795" cy="340" r="8" fill="#5a6860"/>
+  <rect x="916" y="270" width="112" height="35" rx="5" fill="#51615a"/>
+  <rect x="916" y="339" width="112" height="35" rx="5" fill="#51615a"/>
+  <text x="964" y="327" text-anchor="middle" class="silk">HPhone</text>
+  <text x="964" y="396" text-anchor="middle" class="silk">MIC</text>
+  <rect x="641" y="413" width="349" height="29" rx="4" fill="#304641"/>
+  <g fill="#acbab1">
+    <use href="#horizontal" x="651" y="422"/>
+    <use href="#horizontal" x="672.5" y="422"/>
+    <use href="#horizontal" x="694" y="422"/>
+    <use href="#horizontal" x="715.5" y="422"/>
+    <use href="#horizontal" x="737" y="422"/>
+    <use href="#horizontal" x="758.5" y="422"/>
+    <use href="#horizontal" x="780" y="422"/>
+    <use href="#horizontal" x="801.5" y="422"/>
+    <use href="#horizontal" x="823" y="422"/>
+    <use href="#horizontal" x="844.5" y="422"/>
+    <use href="#horizontal" x="866" y="422"/>
+    <use href="#horizontal" x="887.5" y="422"/>
+    <use href="#horizontal" x="909" y="422"/>
+    <use href="#horizontal" x="930.5" y="422"/>
+    <use href="#horizontal" x="952" y="422"/>
+    <use href="#horizontal" x="973.5" y="422"/>
+  </g>
+  <text x="855" y="466" class="pin" style="fill:#006b61">PIEZO</text>
+
+  <!-- One physical jumper. The arrow shows the direction of the timer output. -->
+  <path d="M117 357.4 H51 Q35 357.4 35 373 V513 Q35 535 57 535 H800 Q823 535 823 512 V443"
+        fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M117 357.4 H51 Q35 357.4 35 373 V513 Q35 535 57 535 H800 Q823 535 823 512 V443"
+        fill="none" stroke="#006b61" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#signal)"/>
+  <circle cx="117" cy="357.4" r="6.5" fill="#006b61" stroke="#fff" stroke-width="2"/>
+  <circle cx="823" cy="433" r="6.5" fill="#006b61" stroke="#fff" stroke-width="2"/>
+  <text x="418" y="527" text-anchor="middle" class="pin" style="fill:#006b61">점퍼 1가닥 · 감지음 PWM</text>
+
+  <text x="45" y="583" class="body">J3의 왼쪽 열(1-L)에서 PA6에 꽂는다.</text>
+  <text x="579" y="583" class="body">버저 아래 두 줄 헤더의 PIEZO 입력에 꽂는다.</text>
+  <rect x="40" y="607" width="1010" height="66" rx="8" fill="#e6efed"/>
+  <text x="58" y="635" class="body">실습판에 장착된 오디오 모듈은 키트 전원과 공통 GND를 사용한다.</text>
+  <text x="58" y="660" class="note">정렬 모드에서는 무음이다. 스캔 모드에서 평평한 표적을 정면 약 20 cm에 놓고 해당 방향에서 소리가 나는지 듣는다.</text>
+  <text x="40" y="704" class="note">근거 · 실험3-Timer_Counter_PWM 교재 41쪽 모듈 사진 · 42쪽 압전 버저 회로 · 43쪽 PA6 결선 사진</text>
+</svg>

@@ -4,6 +4,7 @@
 void Init_STM32F103(void){
   
   ErrorStatus HSEStartUpStatus;
+  u32 remaining;
   
   RCC_DeInit();
 
@@ -37,17 +38,15 @@ void Init_STM32F103(void){
     /* Enable PLL */ 
     RCC_PLLCmd(ENABLE);
 
-    /* Wait till PLL is ready */
-    while(RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET)
-    {
-    }
-
-    /* Select PLL as system clock source */
-    RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
-
-    /* Wait till PLL is used as system clock source */
-    while(RCC_GetSYSCLKSource() != 0x08)
-    {
+    /* RCC_DeInit selects HSI. Keep it if the PLL cannot start or switch.
+       Peripheral rates are derived from the actual clock after this returns. */
+    remaining = 65535UL;
+    while (remaining && RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET) --remaining;
+    if (RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == SET) {
+      RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
+      remaining = 65535UL;
+      while (remaining && RCC_GetSYSCLKSource() != 0x08) --remaining;
+      if (RCC_GetSYSCLKSource() != 0x08) RCC_SYSCLKConfig(RCC_SYSCLKSource_HSI);
     }
   }
 

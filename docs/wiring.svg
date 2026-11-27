@@ -84,7 +84,8 @@
   <rect x="655" y="495" width="365" height="59" rx="9" class="panel"/>
   <text x="677" y="533" class="pin">Signal</text><text x="798" y="532" class="body">SG90 주황색</text>
   <rect x="655" y="562" width="365" height="59" rx="9" class="panel"/>
-  <text x="677" y="600" class="pin">PIEZO</text><text x="798" y="599" class="body">키트 피에조 모듈 입력</text>
+  <text x="677" y="600" class="pin">PIEZO</text><text x="798" y="588" class="body">AUDIO MODULE</text>
+  <text x="798" y="609" class="note">둥근 부저 아래 헤더 입력</text>
   <g class="net" stroke="#006d65" marker-end="url(#drive)">
     <path d="M344 412 H651"/><path d="M344 593 H651"/>
   </g>
@@ -92,7 +93,7 @@
   <path d="M655 458 H348" class="net" stroke="#2e6396" marker-end="url(#echo)"/>
   <g class="signal">
     <text x="500" y="404">트리거 출력</text><text x="500" y="450">ECHO 입력</text>
-    <text x="500" y="518">위치 PWM · 20 ms 주기</text><text x="500" y="585">감지음 출력</text>
+    <text x="500" y="518">위치 PWM · 20 ms 주기</text><text x="500" y="585">점퍼 1가닥 · 감지음 출력</text>
   </g>
 
   <rect x="40" y="638" width="980" height="104" fill="#edf1f7" rx="9"/>
